@@ -1,0 +1,9 @@
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.jsdocrc text eol=lf
+.npmignore text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.md text eol=lf

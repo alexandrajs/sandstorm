@@ -1,0 +1,49 @@
+{
+  "name": "sandstorm",
+  "version": "0.0.1",
+  "description": "Not a MongoDB ORM",
+  "main": "./index.js",
+  "scripts": {
+    "test": " ./node_modules/.bin/_mocha",
+    "coverage": "./node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- -R spec",
+    "docs": "./node_modules/.bin/jsdoc -c ./.jsdocrc -r -R ./README.md  -d ../../gh-pages/sandstorm/ src/",
+    "codeclimate": "docker run --rm --env CODECLIMATE_CODE=\"$PWD\" --volume \"$PWD\":/code --volume /var/run/docker.sock:/var/run/docker.sock --volume /tmp/cc:/tmp/cc codeclimate/codeclimate analyze -f html > codeclimate.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alexandrajs/sandstorm"
+  },
+  "keywords": [
+    "mongodb",
+    "nodejs",
+    "orm"
+  ],
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "author": "ponury.kostek@gmail.com",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alexandrajs/sandstorm/issues"
+  },
+  "homepage": "https://github.com/alexandrajs/sandstorm#readme",
+  "dependencies": {
+    "amule": "^0.2.0",
+    "amule-aim": "^0.4.1",
+    "amule-more": "^0.1.0",
+    "amule-rush": "^0.3.0",
+    "fast.js": "^0.1.1",
+    "mongodb": "^2.2.33",
+    "run-parallel": "^1.1.6",
+    "utls": "^0.2.22"
+  },
+  "devDependencies": {
+    "benchmark": "^2.1.4",
+    "coveralls": "^2.11.15",
+    "ink-docstrap": "^1.3.2",
+    "istanbul": "^0.4.5",
+    "jsdoc": "^3.4.3",
+    "mocha": "^2.5.3",
+    "mocha-lcov-reporter": "^1.2.0"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "tags": {
+    "allowUnknownTags": true
+  },
+  "templates": {
+    "cleverLinks": false,
+    "monospaceLinks": false,
+    "default": {
+      "outputSourceFiles": false
+    },
+    "systemName": "Sandstorm",
+    "footer": "",
+    "copyright": "",
+    "navType": "vertical",
+    "theme": "lumen",
+    "collapseSymbols": false,
+    "inverseNav": false
+  },
+  "opts": {
+    "template": "./node_modules/ink-docstrap/template/"
+  }
+}

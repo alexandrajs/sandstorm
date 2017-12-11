@@ -10,6 +10,8 @@ before_script:
   - sudo service mongod start
   - sleep 15
   - mongo admin --eval 'db.adminCommand( { setFeatureCompatibilityVersion:"3.4" } )'
+services:
+  - redis-server
 node_js:
   - 6
   - 8

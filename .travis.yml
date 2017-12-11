@@ -6,6 +6,10 @@ addons:
     packages:
       mongodb-org-server
 language: node_js
+before_script:
+  - sudo service mongod start
+  - sleep 15
+  - mongo admin --eval 'db.adminCommand( { setFeatureCompatibilityVersion:"3.4" } )'
 node_js:
   - 6
   - 8

@@ -1,11 +1,10 @@
 {
   "name": "sandstorm",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Not a MongoDB ORM",
   "main": "./index.js",
   "scripts": {
-    "test": " ./node_modules/.bin/_mocha",
-    "coverage": "./node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- -R spec",
+    "test": "./node_modules/.bin/istanbul cover node_modules/.bin/_mocha -- -R spec",
     "docs": "./node_modules/.bin/jsdoc -c ./.jsdocrc -r -R ./README.md  -d ../../gh-pages/sandstorm/ src/",
     "codeclimate": "docker run --rm --env CODECLIMATE_CODE=\"$PWD\" --volume \"$PWD\":/code --volume /var/run/docker.sock:/var/run/docker.sock --volume /tmp/cc:/tmp/cc codeclimate/codeclimate analyze -f html > codeclimate.html"
   },

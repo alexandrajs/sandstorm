@@ -2,26 +2,7 @@
  * @author Michał Żaloudik <ponury.kostek@gmail.com>
  */
 "use strict";
-
-/**
- *
- * @param target
- * @param schema
- * @param key
- * @returns {*}
- */
-function get(target, schema, key) {
-	if (target[key] === undefined) {
-		if (schema.required) {
-			if (schema.default !== undefined) {
-				return typeof schema.default === "function" ? schema.default() : schema.default;
-			}
-			throw new Error("missing_property");
-		}
-		return;
-	}
-	return new Date(target[key].toJSON());
-}
+const common = require("../common");
 
 /**
  *
@@ -66,7 +47,7 @@ function unset(model, target, schema, key, value) {
 }
 
 module.exports = {
-	get,
+	get: common.modelGet,
 	set,
 	unset
 };

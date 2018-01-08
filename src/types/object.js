@@ -9,26 +9,6 @@ const Model = require("../model");
 
 /**
  *
- * @param target
- * @param schema
- * @param key
- * @returns {*}
- */
-function get(target, schema, key) {
-	if (target[key] === undefined) {
-		if (schema.required) {
-			if (schema.default !== undefined) {
-				return typeof schema.default === "function" ? schema.default() : schema.default;
-			}
-			throw new Error("missing_property");
-		}
-		return;
-	}
-	return fast.object.clone(target[key]);
-}
-
-/**
- *
  * @param model
  * @param target
  * @param set
@@ -40,16 +20,14 @@ function get(target, schema, key) {
 function _set(model, target, set, schema, key, value) {
 	if (!schema.properties || common.isEmpty(schema.properties)) {
 		target[key] = set[key] = fast.object.clone(value);
-		//console.warn(schema);
 		return;
 	}
 	set[key] = {};
 	target[key] = {};
-	if(schema.properties === undefined) {
-		set[key] = target[key] = value;
-		return;
-	}
 	fast.object.forEach(value, (item, targetKey) => {
+		if(!schema.properties.hasOwnProperty(targetKey)) {
+			throw new RangeError("key not allowed");
+		}
 		const type = schema.properties[targetKey].type;
 		if (type in types) {
 			return types[type].set(model, target[key], set[key], schema.properties[targetKey], targetKey, item);
@@ -81,7 +59,7 @@ function _set(model, target, set, schema, key, value) {
  * @returns {*}
  */
 function set(model, target, set, schema, key, value) {
-	if (!common.isPlainObject(value)) {
+	if (!value || !common.isPlainObject(value)) {
 		throw new Error("Wrong property '" + key + "' type", "wrong_property_type");
 	}
 	_set(model, target, set, schema, key, value);
@@ -99,7 +77,7 @@ function unset(model, target, schema, key, value) {
 }
 
 module.exports = {
-	get,
+	get: common.modelGet,
 	set,
 	unset
 };

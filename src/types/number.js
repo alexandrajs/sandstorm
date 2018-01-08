@@ -2,26 +2,7 @@
  * @author Michał Żaloudik <ponury.kostek@gmail.com>
  */
 "use strict";
-
-/**
- *
- * @param target
- * @param schema
- * @param key
- * @returns {*}
- */
-function get(target, schema, key) {
-	if (target[key] === undefined) {
-		if (schema.required) {
-			if (schema.default !== undefined) {
-				return typeof schema.default === "function" ? schema.default() : schema.default;
-			}
-			throw new Error("missing_property");
-		}
-		return;
-	}
-	return target[key];
-}
+const common = require("../common");
 
 /**
  *
@@ -34,11 +15,10 @@ function get(target, schema, key) {
  * @private
  */
 function _set(model, target, set, schema, key, value) {
-	const length = value.length;
-	if (schema.min && length < schema.min) {
+	if (schema.min !== undefined && value < schema.min) {
 		throw new Error("too_short");
 	}
-	if (schema.max && length > schema.max) {
+	if (schema.max !== undefined && value > schema.max) {
 		throw new Error("too_long");
 	}
 	set[key] = target[key] = value;
@@ -56,10 +36,10 @@ function _set(model, target, set, schema, key, value) {
  */
 function set(model, target, set, schema, key, value) {
 	if (typeof value !== "number" || value !== value) {
-		if (!(value instanceof String)) {
+		if (!(value instanceof Number)) {
 			throw new Error("Wrong property '" + key + "' type", "wrong_property_type");
 		} else {
-			value = parseFloat(value);
+			value = value.valueOf();
 		}
 	}
 	_set(model, target, set, schema, key, value);
@@ -77,7 +57,7 @@ function unset(model, target, schema, key, value) {
 }
 
 module.exports = {
-	get,
+	get: common.modelGet,
 	set,
 	unset
 };

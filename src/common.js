@@ -167,36 +167,51 @@ function pushUnique(array, item) {
 function objectToDotNotation(object, options) {
 	options = fast.assign({arrays: false}, options || {});
 	const result = {};
-	_objectToDotNotation_object(object, result, [], options);
+	_objectToDotNotation(object, result, [], options);
 	return result;
 }
 
-function _objectToDotNotation_object(object, result, path, options) {
+function _objectToDotNotation(object, result, path, options) {
 	fast.object.forEach(object, (value, key) => {
 		path.push(key);
-		if (value instanceof Array && options.arrays) {
-			_objectToDotNotation_array(value, result, path, options);
-		} else if (typeof value === 'object' && value !== null) {
-			_objectToDotNotation_object(value, result, path, options);
+		if (typeof value === "object" && value !== null) {
+			_objectToDotNotation(value, result, path, options);
 		} else {
-			result[path.join('.')] = value;
+			result[path.join(".")] = value;
 		}
 		path.pop();
 	});
 }
 
-function _objectToDotNotation_array(array, result, path, options) {
-	fast.array.forEach(array, (value, key) => {
-		path.push(key);
-		if (value instanceof Array && options.arrays) {
-			_objectToDotNotation_object(value, result, path, options);
-		} else if (typeof value === 'object' && value !== null) {
-			_objectToDotNotation_object(value, result, path, options);
-		} else {
-			result[path.join('.')] = value;
+/**
+ *
+ * @param target
+ * @param schema
+ * @param key
+ * @returns {*}
+ */
+function modelGet(target, schema, key) {
+	if (target[key] === undefined) {
+		if (schema.required) {
+			if (schema.default !== undefined) {
+				return typeof schema.default === "function" ? schema.default() : schema.default;
+			}
+			throw new Error("missing_property");
 		}
-		path.pop();
-	});
+		return;
+	}
+	switch (schema.type) {
+		case "Array":
+			return fast.cloneArray(target[key]);
+		case "Date":
+			return new Date(target[key].toJSON());
+		case "Mixed":
+			return typeof target[key] === "object" && target[key] !== null ? fast.clone(target[key]) : target[key];
+		case "Object":
+			return fast.object.clone(target[key]);
+		default:
+			return target[key];
+	}
 }
 
 module.exports = {
@@ -210,5 +225,6 @@ module.exports = {
 	docToModel,
 	pathMap,
 	pushUnique,
-	objectToDotNotation
+	objectToDotNotation,
+	modelGet
 };

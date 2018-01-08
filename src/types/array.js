@@ -9,26 +9,6 @@ const Model = require("../model");
 
 /**
  *
- * @param target
- * @param schema
- * @param key
- * @returns {*}
- */
-function get(target, schema, key) {
-	if (target[key] === undefined) {
-		if (schema.required) {
-			if (schema.default !== undefined) {
-				return typeof schema.default === "function" ? schema.default() : schema.default;
-			}
-			throw new Error("missing_property");
-		}
-		return;
-	}
-	return fast.cloneArray(target[key]);
-}
-
-/**
- *
  * @param model
  * @param target
  * @param set
@@ -101,7 +81,7 @@ function unset(model, target, schema, key, value) {
 }
 
 module.exports = {
-	get,
+	get: common.modelGet,
 	set,
 	unset
 };

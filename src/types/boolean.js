@@ -2,26 +2,7 @@
  * @author Michał Żaloudik <ponury.kostek@gmail.com>
  */
 "use strict";
-
-/**
- *
- * @param target
- * @param schema
- * @param key
- * @returns {*}
- */
-function get(target, schema, key) {
-	if (target[key] === undefined) {
-		if (schema.required) {
-			if (schema.default !== undefined) {
-				return typeof schema.default === "function" ? schema.default() : schema.default;
-			}
-			throw new Error("missing_property");
-		}
-		return;
-	}
-	return target[key];
-}
+const common = require("../common");
 
 /**
  *
@@ -49,7 +30,10 @@ function _set(model, target, set, schema, key, value) {
  */
 function set(model, target, set, schema, key, value) {
 	if (value !== true && value !== false) {
-		throw new Error("Wrong property '" + key + "' type", "wrong_property_type");
+		if (!(value instanceof Boolean)) {
+			throw new Error("Wrong property '" + key + "' type", "wrong_property_type");
+		}
+		value = value.valueOf();
 	}
 	_set(model, target, set, schema, key, value);
 }
@@ -66,7 +50,7 @@ function unset(model, target, schema, key, value) {
 }
 
 module.exports = {
-	get,
+	get: common.modelGet,
 	set,
 	unset
 };

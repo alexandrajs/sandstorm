@@ -42,16 +42,16 @@ Schema.prototype.export = function () {
  */
 Schema.prototype.register = function register(name, blueprint) {
 	if (typeof name !== "string") {
-		throw new TypeError("Schema name must be string", "ERR_SCHEMA_NAME_MUST_BE_STRING");
+		throw new TypeError("ERR_SCHEMA_NAME_MUST_BE_STRING");
 	}
 	if (name in this.orm.schemas) {
-		throw new Error("Schema already exists", "ERR_SCHEMA_ALREADY_EXISTS");
+		throw new Error("ERR_SCHEMA_ALREADY_EXISTS");
 	}
 	if (!common.isPlainObject(blueprint)) {
-		throw new TypeError("Blueprint must be object", "ERR_BLUEPRINT_MUST_BE_PLAIN_OBJECT");
+		throw new TypeError("ERR_BLUEPRINT_MUST_BE_PLAIN_OBJECT");
 	}
 	if (name in types) {
-		throw new Error("Can't overwrite base type", "ERR_CANT_OVERWRITE_BASE_TYPE");
+		throw new Error("ERR_CANT_OVERWRITE_BASE_TYPE");
 	}
 	const dependencies = {};
 	const dependents = {};
@@ -116,10 +116,10 @@ function expandProperty(property, path, schema, orm) {
 			return new MixedProperty(property.options);
 		default:
 			if (property.type in orm.schemas) {
-				return new ModelProperty(property, path, schema);
+				return new ModelProperty(fast.object.assign({}, property.options, {type: property.type}), path, schema);
 			}
 	}
-	throw new TypeError("Unsupported property type '" + property.type + "'", "ERR_UNSUPPORTED_SCHEMA_PROPERTY_TYPE");
+	throw new TypeError("ERR_UNSUPPORTED_SCHEMA_PROPERTY_TYPE");
 }
 
 /**
@@ -148,15 +148,12 @@ function parseArrayProperty(property, path, schema, orm) {
 		};
 	}
 	if (property[0] !== null && typeof property[0] === "object") {
-		path.push("$");
-		const obj = {
+		return {
 			type: "Array",
-			options: {item: expandProperty(parseProperty(property[0], path, schema, orm), path, schema, orm)}
+			options: {item: expandProperty(parseObjectProperty(property[0], path, schema, orm), path, schema, orm)}
 		};
-		path.pop();
-		return obj;
 	}
-	throw new TypeError("Unsupported Array item type", "ERR_UNSUPPORTED_ARRAY_ITEM_TYPE");
+	throw new TypeError("ERR_UNSUPPORTED_ARRAY_ITEM_TYPE");
 }
 
 /**
@@ -218,7 +215,7 @@ function parseProperty(property, path, schema, orm) {
 	} else if (propertyType === "object" && property !== null) {
 		return parseObjectProperty(property, path, schema, orm);
 	}
-	throw new TypeError("Unsupported 'property' (" + path + ") type", "ERR_UNSUPPORTED_OBJECT_PROPERTY_TYPE");
+	throw new TypeError("ERR_UNSUPPORTED_OBJECT_PROPERTY_TYPE");
 }
 
 /**
@@ -250,7 +247,6 @@ function addSchemaDependent(schema, path, name, orm, search) {
 	const target = orm.schemas[name];
 	if (!(schema.type in target.dependents)) {
 		target.dependents[schema.type] = {};
-		return;
 	}
 	fast.object.assign(target.dependents[schema.type], {[path]: search || []});
 }

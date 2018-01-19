@@ -6,12 +6,14 @@
 /**
  *
  * @param options
+ * @param path
  * @constructor
  */
-function ModelProperty(options, schema) {
+function ModelProperty(options, path) {
 	this.type = options.type;
 	this.required = options.required || false;
 	this.search = options.search;
+	this.path = path;
 }
 
 module.exports = ModelProperty;

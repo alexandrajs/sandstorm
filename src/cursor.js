@@ -4,6 +4,8 @@
 "use strict";
 const common = require("./common");
 const fast = require("fast.js");
+const Promise = require("bluebird");
+
 /**
  *
  * @param cursor
@@ -24,7 +26,10 @@ function Cursor(cursor, orm, name, options) {
  * @param options
  */
 Cursor.prototype.toArray = function (options) {
-	options = fast.assign({raw: false, hydrate : []}, options || {});
+	options = fast.assign({
+		raw: false,
+		hydrate: []
+	}, options || {});
 	return this.cursor.toArray().then((docs) => {
 		if (options.raw && !options.hydrate.length) {
 			return docs;
@@ -40,6 +45,7 @@ Cursor.prototype.toArray = function (options) {
 		return models;
 	});
 };
+/* istanbul ignore next */
 /**
  *
  * @param options
@@ -47,37 +53,62 @@ Cursor.prototype.toArray = function (options) {
 Cursor.prototype.stream = function (options) {
 	// TODO: implement
 };
+/* istanbul ignore next */
 Cursor.prototype.map = function () {
 	// TODO: implement
 };
+/* istanbul ignore next */
 Cursor.prototype.filter = function () {
 	// TODO: implement
 };
+/* istanbul ignore next */
 Cursor.prototype.forEach = function () {
 	// TODO: implement
 };
+/**
+ *
+ * @param {number} value
+ * @returns {Cursor}
+ */
 Cursor.prototype.limit = function (value) {
 	this.cursor.limit(value);
 	return this;
 };
+/**
+ *
+ * @param {string|Array|Object} keyOrList
+ * @param {number} direction
+ * @returns {Cursor}
+ */
 Cursor.prototype.sort = function (keyOrList, direction) {
 	this.cursor.sort(keyOrList, direction);
 	return this;
 };
+/**
+ *
+ * @param {number} value
+ * @returns {Cursor}
+ */
 Cursor.prototype.skip = function (value) {
 	this.cursor.skip(value);
 	return this;
 };
 /**
  *
- * @param options
+ * @param {boolean} applySkipLimit
+ * @param {object} options
  */
-Cursor.prototype.count = function (options) {
-	return this.cursor.count(options);
+Cursor.prototype.count = function (applySkipLimit, options) {
+	return this.cursor.count(applySkipLimit, options);
 };
+/**
+ *
+ * @param names
+ * @returns {Cursor}
+ */
 Cursor.prototype.hydrate = function (names) {
 	if (!(names instanceof Array)) {
-		throw new TypeError("", "");
+		throw new TypeError("");
 	}
 	this.options.hydrate = names;
 	return this;

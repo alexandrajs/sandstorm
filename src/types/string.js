@@ -17,13 +17,13 @@ const common = require("../common");
 function _set(model, target, set, schema, key, value) {
 	const length = value.length;
 	if (schema.min && length < schema.min) {
-		throw new Error("too_short");
+		throw new RangeError("ERR_STRING_TOO_SHORT");
 	}
 	if (schema.max && length > schema.max) {
-		throw new Error("too_long");
+		throw new RangeError("ERR_STRING_TOO_LONG");
 	}
 	if (schema.pattern && !schema.pattern.test(value)) {
-		throw new Error("not_match_pattern");
+		throw new Error("ERR_STRING_NOT_MATCH_PATTERN");
 	}
 	set[key] = target[key] = value;
 }
@@ -41,7 +41,7 @@ function _set(model, target, set, schema, key, value) {
 function set(model, target, set, schema, key, value) {
 	if (typeof value !== "string") {
 		if (!(value instanceof String)) {
-			throw new Error("Wrong property '" + key + "' type", "wrong_property_type");
+			throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
 		} else {
 			value = value.valueOf();
 		}
@@ -49,19 +49,7 @@ function set(model, target, set, schema, key, value) {
 	_set(model, target, set, schema, key, value);
 }
 
-/**
- *
- * @param model
- * @param target
- * @param schema
- * @param key
- * @param value
- */
-function unset(model, target, schema, key, value) {
-}
-
 module.exports = {
 	get: common.modelGet,
-	set,
-	unset
+	set
 };

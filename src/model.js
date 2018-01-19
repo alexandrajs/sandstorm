@@ -1,13 +1,13 @@
-"use strict";
-
 /**
  * @author Michał Żaloudik <ponury.kostek@gmail.com>
  */
+"use strict";
+
 /**
  *
- * @param orm
- * @param name
- * @param data
+ * @param {Sandstorm} orm
+ * @param {string} name
+ * @param {Object} [data]
  * @constructor
  */
 function Model(orm, name, data) {
@@ -15,8 +15,8 @@ function Model(orm, name, data) {
 	this.name = name;
 	this.schema = this.orm.schemas[name];
 	this.data = fast.assign({}, data || {});
+	this.overwrite = false;
 	this._set = {};
-	this._unset = {};
 	this._hydrated = [];
 }
 
@@ -24,34 +24,43 @@ module.exports = Model;
 const fast = require("fast.js");
 const types = require("./types");
 const common = require("./common");
-const mongodb = require("mongodb");
+const Promise = require("bluebird");
+const ObjectID = require("mongodb").ObjectID;
 /**
  *
- * @param properties
+ * @param {Object} properties
  */
 Model.prototype.set = function (properties) {
 	_set(this, properties);
 };
 /**
  *
- * @param options
- * @returns {{}}
+ * @param {Object} properties
+ */
+Model.prototype.merge = function (properties) {
+	_merge(this, properties);
+};
+/**
+ *
+ * @param {Object} [options]
+ * @returns {Object}
  */
 Model.prototype.get = function (options) {
 	options = options || {dry: false};
 	return _get(this, options);
 };
 /**
- *
+ * @returns {Promise}
  */
 Model.prototype.save = function () {
 	return new Promise((resolve, reject) => {
 		_save_embedded(this).then(() => {
 			this.dehydrate();
-			if (this.data._id) {
-				return _update(this, resolve, reject);
+			if (this.data._id && !this.overwrite) {
+				return _save_merge(this, resolve, reject);
 			}
-			_insert(this, resolve, reject);
+			_save_set(this, resolve, reject);
+			this.overwrite = false;
 		}).catch(reject);
 	});
 };
@@ -71,7 +80,7 @@ Model.prototype.dehydrate = function () {
 };
 /**
  *
- * @returns {*}
+ * @returns {Object}
  */
 Model.prototype.toJSON = function () {
 	return this.data;
@@ -79,65 +88,63 @@ Model.prototype.toJSON = function () {
 
 /**
  *
- * @param model
- * @param resolve
- * @param reject
+ * @param {Model} model
+ * @param {function} resolve
+ * @param {function} reject
  * @private
  */
-function _insert(model, resolve, reject) {
+function _save_set(model, resolve, reject) {
 	model.orm.db.collection(model.name, (err, collection) => {
 		if (err) {
-			reject(err);
+			return reject(err);
 		}
 		const doc = model.get();
-		collection.insertOne(doc, (err, result) => {
+		const _save_set_cb = (err) => {
 			if (err) {
 				return reject(err);
 			}
 			model._set = {};
-			model._unset = {};
 			model.data._id = doc._id;
 			resolve(doc._id);
-		});
+		};
+		if (model.data._id) {
+			if (typeof model.data._id === "string") {
+				model.data._id = new ObjectID(model.data._id);
+			}
+			return collection.replaceOne({_id: model.data._id}, doc, _save_set_cb);
+		}
+		collection.insertOne(doc, _save_set_cb);
 	});
 }
 
 /**
  *
- * @param model
- * @param resolve
- * @param reject
- * @returns {*}
+ * @param {Model} model
+ * @param {function} resolve
+ * @param {function} reject
  * @private
  */
-function _update(model, resolve, reject) {
-	let changed = false;
-	const update = {};
-	if (model._set && Object.keys(model._set).length) {
-		update.$set = common.objectToDotNotation(model._set);
-		changed = true;
+function _save_merge(model, resolve, reject) {
+	if (!model.data._id) {
+		return reject(new Error("ERR_MISSING_ID_ON_MERGE_SAVE"));
 	}
-	if (model._unset && Object.keys(model._unset).length) {
-		update.$unset = common.objectToDotNotation(model._unset);
-		changed = true;
-	}
-	const _id = model.data._id;
-	if (!changed) {
+	const _id = typeof model.data._id === "string" ? new ObjectID(model.data._id) : model.data._id;
+	if (common.isEmpty(model._set)) {
 		return resolve(_id);
 	}
+	const update = {$set: common.objectToDotNotation(model._set)};
 	model.orm.db.collection(model.name, (err, collection) => {
 		if (err) {
-			reject(err);
+			return reject(err);
 		}
 		model._set = {};
-		model._unset = {};
-		collection.updateOne({_id: _id}, update, (err, result) => {
+		collection.updateOne({_id: _id}, update, (err) => {
 			if (err) {
 				return reject(err);
 			}
 			model.orm.cache.delete(model.name, model.data._id, (err) => {
 				if (err) {
-					reject(err);
+					return reject(err);
 				}
 				resolve(_id);
 			});
@@ -147,9 +154,9 @@ function _update(model, resolve, reject) {
 
 /**
  *
- * @param model
- * @param options
- * @returns {{}}
+ * @param {Model} model
+ * @param {Object} options
+ * @returns {Object}
  * @private
  */
 function _get(model, options) {
@@ -160,34 +167,44 @@ function _get(model, options) {
 	fast.object.forEach(model.schema.properties, (property, propertyKey) => {
 		const type = model.schema.properties[propertyKey].type;
 		if (type in types) {
-			properties[propertyKey] = types[type].get(model.data, model.schema.properties[propertyKey], propertyKey);
-			return;
-		}
-		if (type in model.orm.schemas) {
-			if (!options.dry && property instanceof Model) {
-				properties[propertyKey] = property.get();
+			const value = types[type].get(model.data, model.schema.properties[propertyKey], propertyKey);
+			if (value !== null && value !== undefined) {
+				properties[propertyKey] = value;
 			}
 			return;
 		}
-		throw new TypeError("Wrong property '" + propertyKey + "' type", "wrong_property_type");
+		if (type in model.orm.schemas) {
+			/*if (!options.dry && property instanceof Model) {
+				properties[propertyKey] = model.data[propertyKey].get();
+			} else {*/
+			properties[propertyKey] = model.data[propertyKey];
+			/*}*/
+			return;
+		}
+		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
 	});
 	return properties;
 }
 
 /**
  *
- * @param model
- * @param properties
+ * @param {Model} model
+ * @param {Object} properties
  * @private
  */
 function _set(model, properties) {
+	model.overwrite = true;
+	model.data = {_id: model.data._id};
 	fast.object.forEach(properties, (item, targetKey) => {
 		if (targetKey === "_id") {
-			if (typeof item === "string") {
-				item = new mongodb.ObjectID(item);
+			if (model.data._id) {
+				throw Error("ERR_CANT_OVERWRITE_ID");
 			}
-			if (!(item instanceof mongodb.ObjectID)) {
-				throw TypeError("_id must be instance of ObjectID", "ERR_ID_MUST_BE_OBJECTID");
+			if (typeof item === "string") {
+				item = new ObjectID(item);
+			}
+			if (!(item instanceof ObjectID)) {
+				throw TypeError("ERR_ID_MUST_BE_OBJECTID");
 			}
 			model.data[targetKey] = item;
 			model._set[targetKey] = item;
@@ -211,20 +228,53 @@ function _set(model, properties) {
 				}
 			}
 		}
-		throw new TypeError("Wrong property '" + targetKey + "' type '" + type + "'", "wrong_property_type");
+		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
 	});
 }
 
 /**
  *
- * @param model
+ * @param {Model} model
+ * @param {Object} properties
+ * @private
+ */
+function _merge(model, properties) {
+	fast.object.forEach(properties, (item, targetKey) => {
+		if (targetKey === "_id") {
+			throw Error("ERR_CANT_OVERWRITE_ID");
+		}
+		const type = model.schema.properties[targetKey].type;
+		if (type in types) {
+			return types[type].set(model, model.data, model._set, model.schema.properties[targetKey], targetKey, item);
+		}
+		if (type in model.orm.schemas) {
+			if (common.isPlainObject(item)) {
+				const data = item;
+				item = new Model(model.orm, type);
+				item.merge(data);
+			}
+			if (item instanceof Model) {
+				if (item.name === type) {
+					model.data[targetKey] = item;
+					model._set[targetKey] = item;
+					return;
+				}
+			}
+		}
+		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
+	});
+}
+
+/**
+ *
+ * @param {Model} model
  * @returns {Promise}
  * @private
  */
 function _save_embedded(model) {
 	const wait = [];
 	fast.object.forEach(model.orm.schemas[model.name].dependencies, (paths) => {
-		fast.array.forEach(paths, (path) => {
+		fast.object.forEach(paths, (search, path) => {
 			common.pathMap(model.data, path, (embedded) => {
 				if (embedded instanceof Model) {
 					common.pushUnique(model._hydrated, embedded.name);
@@ -238,8 +288,8 @@ function _save_embedded(model) {
 
 /**
  *
- * @param model
- * @param names
+ * @param {Model} model
+ * @param {Array} names
  * @returns {Promise}
  * @private
  */
@@ -249,25 +299,29 @@ function _hydrate(model, names) {
 	fast.array.forEach(names, (name) => {
 		common.pushUnique(model._hydrated, name);
 		const dependency = dependencies[name];
-		fast.object.forEach(dependency, (paths) => {
-			fast.array.forEach(paths, (path) => {
-				common.pathMap(model.data, path, (embedded) => {
+		if (dependency) {
+			fast.object.forEach(dependency, (searches, path) => {
+				common.pathMap(model.data, path, (embedded, key, target) => {
 					if (!(embedded instanceof Model)) {
 						if (!common.isPlainObject(embedded)) {
 							return;
 						}
+						wait.push(model.orm.get(name, embedded._id).then(_ => {
+							_.hydrate(names);
+							target[key] = _;
+						}));
 					}
-					common.pushUnique(model._hydrated, embedded.name);
+					common.pushUnique(model._hydrated, name);
 				});
 			});
-		});
+		}
 	});
-	return Promise.all(wait);
+	return Promise.all(wait).then(() => model);
 }
 
 /**
  *
- * @param model
+ * @param {Model} model
  * @private
  */
 function _dehydrate(model) {

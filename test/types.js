@@ -217,6 +217,50 @@ describe("types", () => {
 					});
 				});
 			});
+			describe("Number", () => {
+				[
+					{
+						schema: {type: "Number"},
+						value: new Number(12),
+						expected: 12,
+						name: "basic"
+					},
+					{
+						schema: {type: "Number"},
+						value: 42,
+						name: "basic"
+					},
+					{
+						schema: {
+							type: "Number",
+							default: 1,
+							required: true
+						},
+						expected: 1,
+						name: "default value"
+					}
+				].forEach((test) => {
+					it(test.name, () => {
+						const orm = new Orm();
+						orm.Schema.register("sub", {key: "String"});
+						orm.Schema.register("test", {key: test.schema});
+						const model = orm.create("test");
+						if ("value" in test) {
+							if (test.from_model) {
+								const sub = orm.create("sub");
+								sub.set(test.value);
+								test.value = [sub];
+							}
+							model.set({key: test.value});
+						}
+						if (test.is_model) {
+							assert.deepEqual(model.get().key[0].get(), test.expected || test.value);
+						} else {
+							assert.deepEqual(model.get().key, test.expected || test.value);
+						}
+					});
+				});
+			});
 			describe("String", () => {
 				[
 					{
@@ -579,6 +623,45 @@ describe("types", () => {
 					{
 						schema: {
 							type: "Object",
+							required: true
+						},
+						name: "missing required"
+					}
+				].forEach((test) => {
+					it(test.name, () => {
+						const orm = new Orm();
+						orm.Schema.register("sub", {key: test.schema});
+						orm.Schema.register("test", {key: test.schema});
+						const model = orm.create("test");
+						assert.throws(() => {
+							if ("value" in test) {
+								model.set({key: test.value});
+							}
+							model.get();
+						});
+					});
+				});
+			});
+			describe("ObjectID", () => {
+				[
+					{
+						schema: {type: "ObjectID"},
+						value: null,
+						name: "basic"
+					},
+					{
+						schema: {type: "ObjectID"},
+						value: undefined,
+						name: "basic"
+					},
+					{
+						schema: {type: "ObjectID"},
+						value: "wrong string value",
+						name: "basic"
+					},
+					{
+						schema: {
+							type: "ObjectID",
 							required: true
 						},
 						name: "missing required"

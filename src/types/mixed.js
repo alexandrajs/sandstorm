@@ -30,24 +30,12 @@ function _set(model, target, set, schema, key, value) {
  */
 function set(model, target, set, schema, key, value) {
 	if (value === null || value === undefined) {
-		throw new Error("Wrong property '" + key + "' type", "wrong_property_type");
+		throw new Error("ERR_PROPERTY_TYPE_CANT_BE_NULL_OR_UNDEFINED");
 	}
 	_set(model, target, set, schema, key, value);
 }
 
-/**
- *
- * @param model
- * @param target
- * @param schema
- * @param key
- * @param value
- */
-function unset(model, target, schema, key, value) {
-}
-
 module.exports = {
 	get: common.modelGet,
-	set,
-	unset
+	set
 };

@@ -20,10 +20,10 @@ const Model = require("../model");
 function _set(model, target, set, schema, key, value) {
 	const length = value.length;
 	if (schema.min && length < schema.min) {
-		throw new Error("too_short");
+		throw new RangeError("ERR_ARRAY_TOO_SHORT");
 	}
 	if (schema.max && length > schema.max) {
-		throw new Error("too_long");
+		throw new RangeError("ERR_ARRAY_TOO_LONG");
 	}
 	const type = schema.item.type;
 	if (type !== "Mixed") {
@@ -45,7 +45,7 @@ function _set(model, target, set, schema, key, value) {
 					}
 				}
 			}
-			throw new TypeError("Wrong property '" + key + "' type '" + type + "'", "wrong_property_type");
+			throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
 		});
 		return;
 	}
@@ -64,24 +64,12 @@ function _set(model, target, set, schema, key, value) {
  */
 function set(model, target, set, schema, key, value) {
 	if (!(value instanceof Array)) {
-		throw new Error("Wrong property '" + key + "' type", "wrong_property_type");
+		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
 	}
 	_set(model, target, set, schema, key, value);
 }
 
-/**
- *
- * @param model
- * @param target
- * @param schema
- * @param key
- * @param value
- */
-function unset(model, target, schema, key, value) {
-}
-
 module.exports = {
 	get: common.modelGet,
-	set,
-	unset
+	set
 };

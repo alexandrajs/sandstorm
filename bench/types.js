@@ -4,8 +4,7 @@
 "use strict";
 const Benchmark = require('benchmark');
 const suite = new Benchmark.Suite;
-const {} = require('../src/schema');
-const schema = new Schema({schemas: {}});
+const Schema = require('../src/schema');
 
 function Obj() {
 	this.active = {
@@ -50,6 +49,7 @@ suite.add('nop', function () {
 }).add('Schema constructor', function () {
 	new Schema({schemas: {}});
 }).add('Schema register', function () {
+	const schema = new Schema({schemas: {}});
 	schema.register('name', {
 		active: {
 			type: 'Boolean',

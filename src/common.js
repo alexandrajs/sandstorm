@@ -4,40 +4,7 @@
 "use strict";
 const Model = require("./model");
 const fast = require("fast.js");
-
-/**
- *
- * @param {Object} object
- * @param {Function} callback
- * @returns {Object}
- */
-function map(object, callback) {
-	const output = {};
-	for (const key in object) {
-		if (object.hasOwnProperty(key)) {
-			output[key] = callback(object[key], key, object);
-		}
-	}
-	return output;
-}
-
-/**
- *
- * @param {Object} object
- * @param {Function} callback
- * @returns {Object}
- */
-function filter(object, callback) {
-	const output = {};
-	for (const key in object) {
-		if (object.hasOwnProperty(key)) {
-			if (callback(object[key], key, object)) {
-				output[key] = object[key];
-			}
-		}
-	}
-	return output;
-}
+const Promise = require("bluebird");
 
 /**
  *
@@ -55,7 +22,7 @@ function isEmpty(object) {
 
 /**
  *
- * @param value
+ * @param {*} value
  * @returns {boolean}
  */
 function isPlainObject(value) {
@@ -64,19 +31,10 @@ function isPlainObject(value) {
 
 /**
  *
- * @param str
- * @returns {string}
- */
-function unPascalCase(str) {
-	return str[0].toLowerCase() + str.slice(1).replace(/[A-Z]/g, (chr) => "_" + chr.toLowerCase());
-}
-
-/**
- *
- * @param orm
- * @param name
- * @param id
- * @param callback
+ * @param {Sandstorm} orm
+ * @param {string} name
+ * @param {string} id
+ * @param {function} callback
  */
 function ormGet(orm, name, id, callback) {
 	orm.cache.get(name, id, callback);
@@ -84,10 +42,10 @@ function ormGet(orm, name, id, callback) {
 
 /**
  *
- * @param orm
- * @param name
- * @param id
- * @param callback
+ * @param {Sandstorm} orm
+ * @param {string} name
+ * @param {string} id
+ * @param {function} callback
  */
 function getModel(orm, name, id, callback) {
 	ormGet(orm, name, id, (err, doc) => {
@@ -100,9 +58,9 @@ function getModel(orm, name, id, callback) {
 
 /**
  *
- * @param orm
- * @param name
- * @param doc
+ * @param {Sandstorm} orm
+ * @param {string} name
+ * @param {Object} doc
  * @returns {Model}
  */
 function docToModel(orm, name, doc) {
@@ -111,39 +69,45 @@ function docToModel(orm, name, doc) {
 
 /**
  *
- * @param object
- * @param path
- * @param callback
+ * @param {Object} object
+ * @param {string} path
+ * @param {function} callback
  * @returns {*}
  */
 function pathMap(object, path, callback) {
 	if (typeof object !== "object" || object === null) {
-		throw new TypeError("Parameter 'object' must be object", "");
+		throw new TypeError("ERR_PARAMETER_OBJECT_MUST_BE_OBJECT");
 	}
 	if (typeof path !== "string") {
-		throw new TypeError("Parameter 'path' must be string", "");
+		throw new TypeError("ERR_PARAMETER_PATH_MUST_BE_STRING");
 	}
 	if (typeof callback !== "function") {
-		throw new TypeError("Parameter 'path' must be string", "");
+		throw new TypeError("ERR_PARAMETER_PATH_MUST_BE_STRING");
 	}
 	const parts = path.split(".");
 	let current;
 	while (current = parts.shift()) {
+		if (!object) {
+			return;
+		}
 		const item = object[current];
 		if (item !== undefined) {
-			if (!parts.length) {
-				return void callback(item, current, object);
-			}
-			if (current === "$") {
+			/*if (current === "$") {
 				if (object instanceof Array) {
 					if (!parts.length) {
 						return fast.array.forEach(object, (item, key) => callback(item, key, object));
 					}
-					const array_path = parts.join(parts);
-					fast.array.forEach(object, (item) => pathMap(item, array_path, callback));
+					fast.array.forEach(object, (item) => pathMap(item, parts.join("."), callback));
 				}
+			}*/
+			if (!parts.length) {
+				if (item instanceof Array) {
+					return fast.array.forEach(item, callback);
+				}
+				return void callback(item, current, object);
 			}
 		}
+		object = item;
 	}
 }
 
@@ -160,8 +124,8 @@ function pushUnique(array, item) {
 
 /**
  *
- * @param object
- * @param options
+ * @param {Object} object
+ * @param {Object} [options]
  * @returns {Object}
  */
 function objectToDotNotation(object, options) {
@@ -171,6 +135,14 @@ function objectToDotNotation(object, options) {
 	return result;
 }
 
+/**
+ *
+ * @param {Object} object
+ * @param {Object} result
+ * @param {Array} path
+ * @param {Object} options
+ * @private
+ */
 function _objectToDotNotation(object, result, path, options) {
 	fast.object.forEach(object, (value, key) => {
 		path.push(key);
@@ -196,7 +168,7 @@ function modelGet(target, schema, key) {
 			if (schema.default !== undefined) {
 				return typeof schema.default === "function" ? schema.default() : schema.default;
 			}
-			throw new Error("missing_property");
+			throw new Error("ERR_MISSING_PROPERTY");
 		}
 		return;
 	}
@@ -215,11 +187,8 @@ function modelGet(target, schema, key) {
 }
 
 module.exports = {
-	map,
-	filter,
 	isEmpty,
 	isPlainObject,
-	unPascalCase,
 	ormGet,
 	getModel,
 	docToModel,

@@ -3,6 +3,7 @@
  * @ignore
  */
 const assert = require("assert");
+const {StringProperty} = require("../src/properties");
 const Orm = require("../");
 describe("basic types", () => {
 	const types = require("../src/types");
@@ -124,6 +125,49 @@ describe("basic types", () => {
 			});
 		});
 	});
+	it("import", () => {
+		const orm = new Orm();
+		orm.Schema.import({
+			Dummy: {
+				type: "Dummy",
+				properties: {
+					key: new StringProperty({}),
+					value: new StringProperty({})
+				},
+				dependencies: {},
+				dependents: {}
+			}
+		});
+		assert.deepStrictEqual(orm.schemas, {
+			Dummy: {
+				type: "Dummy",
+				properties: {
+					key: new StringProperty({}),
+					value: new StringProperty({})
+				},
+				dependencies: {},
+				dependents: {}
+			}
+		});
+	});
+	it("export", () => {
+		const orm = new Orm();
+		orm.Schema.register("Dummy", {
+			key: "String",
+			value: "String"
+		});
+		assert.deepStrictEqual(orm.Schema.export(), {
+			Dummy: {
+				type: "Dummy",
+				properties: {
+					key: new StringProperty({}),
+					value: new StringProperty({})
+				},
+				dependencies: {},
+				dependents: {}
+			}
+		});
+	});
 	describe("should throws", () => {
 		const tests = {
 			"Array": ["NotExisting"],
@@ -140,12 +184,6 @@ describe("basic types", () => {
 				const orm = new Orm();
 				assert.throws(() => {
 					orm.Schema.register(name, {key: test});
-					console.log('');
-					console.dir(orm.schemas[name].properties.key, {
-						colors: true,
-						depth: 5
-					});
-					console.log('');
 				});
 			});
 		});
@@ -204,9 +242,26 @@ describe("basic types", () => {
 					max: 5
 				}
 			},
-			"Array3": {
+			"Array 3": {
 				in: {
 					"key": []
+				},
+				out: {
+					type: "Array",
+					required: false,
+					default: undefined,
+					item: {
+						type: "Mixed",
+						default: undefined,
+						required: false
+					},
+					min: undefined,
+					max: undefined
+				}
+			},
+			"Array 4": {
+				in: {
+					"key": [{type: "Mixed"}]
 				},
 				out: {
 					type: "Array",

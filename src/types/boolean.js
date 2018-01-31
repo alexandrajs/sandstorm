@@ -31,26 +31,14 @@ function _set(model, target, set, schema, key, value) {
 function set(model, target, set, schema, key, value) {
 	if (value !== true && value !== false) {
 		if (!(value instanceof Boolean)) {
-			throw new Error("Wrong property '" + key + "' type", "wrong_property_type");
+			throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
 		}
 		value = value.valueOf();
 	}
 	_set(model, target, set, schema, key, value);
 }
 
-/**
- *
- * @param model
- * @param target
- * @param schema
- * @param key
- * @param value
- */
-function unset(model, target, schema, key, value) {
-}
-
 module.exports = {
 	get: common.modelGet,
-	set,
-	unset
+	set
 };

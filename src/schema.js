@@ -12,7 +12,7 @@ module.exports = Schema;
 
 /**
  *
- * @param orm
+ * @param {Sandstorm} orm
  * @param options
  * @constructor
  */
@@ -37,21 +37,21 @@ Schema.prototype.export = function () {
 };
 /**
  *
- * @param name
- * @param blueprint
+ * @param {string} name
+ * @param {Object} blueprint
  */
 Schema.prototype.register = function register(name, blueprint) {
 	if (typeof name !== "string") {
-		throw new TypeError("Schema name must be string", "ERR_SCHEMA_NAME_MUST_BE_STRING");
+		throw new TypeError("ERR_SCHEMA_NAME_MUST_BE_STRING");
 	}
 	if (name in this.orm.schemas) {
-		throw new Error("Schema already exists", "ERR_SCHEMA_ALREADY_EXISTS");
+		throw new Error("ERR_SCHEMA_ALREADY_EXISTS");
 	}
 	if (!common.isPlainObject(blueprint)) {
-		throw new TypeError("Blueprint must be object", "ERR_BLUEPRINT_MUST_BE_PLAIN_OBJECT");
+		throw new TypeError("ERR_BLUEPRINT_MUST_BE_PLAIN_OBJECT");
 	}
 	if (name in types) {
-		throw new Error("Can't overwrite base type", "ERR_CANT_OVERWRITE_BASE_TYPE");
+		throw new Error("ERR_CANT_OVERWRITE_BASE_TYPE");
 	}
 	const dependencies = {};
 	const dependents = {};
@@ -62,25 +62,25 @@ Schema.prototype.register = function register(name, blueprint) {
 		dependents: dependents
 	};
 	this.orm.schemas[name] = schema;
-	schema.properties = parse(blueprint, [], schema, this.orm);
+	schema.properties = _parse(blueprint, [], schema, this.orm);
 	return this.orm.schemas[name];
 };
 
 /**
  *
- * @param object
- * @param path
- * @param schema
- * @param orm
+ * @param {Object}object
+ * @param {Array} path
+ * @param {Object} schema
+ * @param {Sandstorm} orm
  * @returns {{}}
  */
-function parse(object, path, schema, orm) {
+function _parse(object, path, schema, orm) {
 	const output = {};
 	for (const key in object) {
 		if (object.hasOwnProperty(key)) {
 			path.push(key);
-			const property = parseProperty(object[key], path, schema, orm);
-			output[key] = expandProperty(property, path, schema, orm);
+			const property = _parseProperty(object[key], path, schema, orm);
+			output[key] = _expandProperty(property, path, schema, orm);
 			path.pop();
 		}
 	}
@@ -90,12 +90,12 @@ function parse(object, path, schema, orm) {
 /**
  *
  * @param property
- * @param path
- * @param schema
- * @param orm
+ * @param {Array} path
+ * @param {Object} schema
+ * @param {Sandstorm} orm
  * @returns {*}
  */
-function expandProperty(property, path, schema, orm) {
+function _expandProperty(property, path, schema, orm) {
 	property.options = property.options || {};
 	switch (property.type) {
 		case "Boolean":
@@ -116,71 +116,68 @@ function expandProperty(property, path, schema, orm) {
 			return new MixedProperty(property.options);
 		default:
 			if (property.type in orm.schemas) {
-				return new ModelProperty(property, path, schema);
+				return new ModelProperty(fast.object.assign({}, property.options, {type: property.type}), path, schema);
 			}
 	}
-	throw new TypeError("Unsupported property type '" + property.type + "'", "ERR_UNSUPPORTED_SCHEMA_PROPERTY_TYPE");
+	throw new TypeError("ERR_UNSUPPORTED_SCHEMA_PROPERTY_TYPE");
 }
 
 /**
  *
  * @param property
- * @param path
- * @param schema
- * @param orm
+ * @param {Array} path
+ * @param {Object} schema
+ * @param {Sandstorm} orm
  * @returns {*}
  */
-function parseArrayProperty(property, path, schema, orm) {
+function _parseArrayProperty(property, path, schema, orm) {
 	if (!property.length) {
 		return {
 			type: "Array",
-			options: {item: expandProperty({type: "Mixed"}, path, schema, orm)}
+			options: {item: _expandProperty({type: "Mixed"}, path, schema, orm)}
 		};
 	}
 	if (typeof property[0] === "string") {
 		if (property[0] in orm.schemas) {
-			addSchemaDependency(schema, path, property[0], orm);
-			addSchemaDependent(schema, path, property[0], orm);
+			_addSchemaDependency(schema, path, property[0], orm, []);
+			_addSchemaDependent(schema, path, property[0], orm, []);
 		}
 		return {
 			type: "Array",
-			options: {item: expandProperty({type: property[0]}, path, schema, orm)}
+			options: {item: _expandProperty({type: property[0]}, path, schema, orm)}
 		};
 	}
 	if (property[0] !== null && typeof property[0] === "object") {
-		path.push("$");
-		const obj = {
+		return {
 			type: "Array",
-			options: {item: expandProperty(parseProperty(property[0], path, schema, orm), path, schema, orm)}
+			options: {item: _expandProperty(_parseObjectProperty(property[0], path, schema, orm), path, schema, orm)}
 		};
-		path.pop();
-		return obj;
 	}
-	throw new TypeError("Unsupported Array item type", "ERR_UNSUPPORTED_ARRAY_ITEM_TYPE");
+	throw new TypeError("ERR_UNSUPPORTED_ARRAY_ITEM_TYPE");
 }
 
 /**
  *
  * @param property
- * @param path
- * @param schema
- * @param orm
+ * @param {Array} path
+ * @param {Object} schema
+ * @param {Sandstorm} orm
  * @returns {*}
  */
-function parseObjectProperty(property, path, schema, orm) {
+function _parseObjectProperty(property, path, schema, orm) {
 	if (typeof property.type === "string") {
 		if (property.type in orm.schemas) {
-			addSchemaDependency(schema, path, property.type, orm, property.search);
-			addSchemaDependent(schema, path, property.type, orm, property.search);
+			_addSchemaDependency(schema, path, property.type, orm, property.search);
+			_addSchemaDependent(schema, path, property.type, orm, property.search);
 		}
 		if (property.type === "Object" && typeof property.properties === "object" && property.properties !== null) {
-			property.properties = parse(property.properties, path, schema, orm);
+			property.properties = _parse(property.properties, path, schema, orm);
 		}
 		if (property.type === "Array") {
 			if (typeof property.item === "object" && property.item !== null) {
-				property.item = expandProperty(parseProperty(property.item, path, schema, orm), path, schema, orm);
+				property.item = _expandProperty(_parseProperty(property.item, path, schema, orm), path, schema, orm);
 			} else if (typeof property.item === "string") {
-				property.item = expandProperty({type: property.item}, path, schema, orm);
+				property.item = _expandProperty({type: property.item}, path, schema, orm);
 			}
 		}
 		return {
@@ -190,67 +187,77 @@ function parseObjectProperty(property, path, schema, orm) {
 	}
 	return {
 		type: "Object",
-		options: {properties: parse(property, path, schema, orm)}
+		options: {properties: _parse(property, path, schema, orm)}
 	};
 }
 
 /**
  *
  * @param property
- * @param path
- * @param schema
- * @param orm
+ * @param {Array} path
+ * @param {Object} schema
+ * @param {Sandstorm} orm
  * @returns {*}
  */
-function parseProperty(property, path, schema, orm) {
+function _parseProperty(property, path, schema, orm) {
 	const propertyType = typeof property;
 	if (propertyType === "string") {
 		if (property in orm.schemas) {
-			addSchemaDependency(schema, path, property, orm);
-			addSchemaDependent(schema, path, property, orm);
+			_addSchemaDependency(schema, path, property, orm, []);
+			_addSchemaDependent(schema, path, property, orm, []);
 		}
 		return {
 			type: property,
 			options: {}
 		};
 	} else if (property instanceof Array) {
-		return parseArrayProperty(property, path, schema, orm);
+		return _parseArrayProperty(property, path, schema, orm);
 	} else if (propertyType === "object" && property !== null) {
-		return parseObjectProperty(property, path, schema, orm);
+		return _parseObjectProperty(property, path, schema, orm);
 	}
-	throw new TypeError("Unsupported 'property' (" + path + ") type", "ERR_UNSUPPORTED_OBJECT_PROPERTY_TYPE");
+	throw new TypeError("ERR_UNSUPPORTED_OBJECT_PROPERTY_TYPE");
 }
 
 /**
  *
- * @param schema
- * @param path
- * @param name
- * @param orm
- * @param search
+ * @param {Object} schema
+ * @param {Array} path
+ * @param {String} name
+ * @param {Sandstorm} orm
+ * @param {Array} search
  */
-function addSchemaDependency(schema, path, name, orm, search) {
-	path = path.join(".");
+function _addSchemaDependency(schema, path, name, orm, search) {
+	const path_str = path.join(".");
 	if (!(name in schema.dependencies)) {
 		schema.dependencies[name] = {};
 	}
-	fast.object.assign(schema.dependencies[name], {[path]: search || []});
+	fast.object.assign(schema.dependencies[name], {[path_str]: search || []});
 }
 
 /**
  *
- * @param schema
- * @param path
- * @param name
- * @param orm
- * @param search
+ * @param {Object} schema
+ * @param {Array} path
+ * @param {String} name
+ * @param {Sandstorm} orm
+ * @param {Array} search
  */
-function addSchemaDependent(schema, path, name, orm, search) {
-	path = path.join(".");
+function _addSchemaDependent(schema, path, name, orm, search) {
+	const path_str = path.join(".");
 	const target = orm.schemas[name];
 	if (!(schema.type in target.dependents)) {
 		target.dependents[schema.type] = {};
-		return;
 	}
-	fast.object.assign(target.dependents[schema.type], {[path]: search || []});
+	fast.object.assign(target.dependents[schema.type], {[path_str]: search || []});
 }
+
+// noinspection JSUnusedGlobalSymbols
+Schema[Symbol.for("private")] = {
+	_addSchemaDependency,
+	_addSchemaDependent,
+	_expandProperty,
+	_parse,
+	_parseArrayProperty,
+	_parseObjectProperty,
+	_parseProperty
+};

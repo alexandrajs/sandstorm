@@ -25,8 +25,8 @@ function _set(model, target, set, schema, key, value) {
 	set[key] = {};
 	target[key] = {};
 	fast.object.forEach(value, (item, targetKey) => {
-		if(!schema.properties.hasOwnProperty(targetKey)) {
-			throw new RangeError("key not allowed");
+		if (!schema.properties.hasOwnProperty(targetKey)) {
+			throw new RangeError("ERR_KEY_NOT_ALLOWED");
 		}
 		const type = schema.properties[targetKey].type;
 		if (type in types) {
@@ -44,7 +44,7 @@ function _set(model, target, set, schema, key, value) {
 				}
 			}
 		}
-		throw new TypeError("Wrong property '" + targetKey + "' type, expected '" + type + "'", "wrong_property_type");
+		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
 	});
 }
 
@@ -60,24 +60,12 @@ function _set(model, target, set, schema, key, value) {
  */
 function set(model, target, set, schema, key, value) {
 	if (!value || !common.isPlainObject(value)) {
-		throw new Error("Wrong property '" + key + "' type", "wrong_property_type");
+		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
 	}
 	_set(model, target, set, schema, key, value);
 }
 
-/**
- *
- * @param model
- * @param target
- * @param schema
- * @param key
- * @param value
- */
-function unset(model, target, schema, key, value) {
-}
-
 module.exports = {
 	get: common.modelGet,
-	set,
-	unset
+	set
 };

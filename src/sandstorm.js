@@ -6,14 +6,13 @@ const fast = require("fast.js");
 const Model = require("./model");
 const Schema = require("./schema");
 const Cursor = require("./cursor");
-const types = require("./types");
 const common = require("./common");
 const mongodb = require("mongodb");
 const AMule = require("amule");
 const Aim = require("amule-aim");
 const Rush = require("amule-rush");
 const More = require("amule-more");
-const parallel = require("run-parallel");
+const Promise = require("bluebird");
 
 /**
  *
@@ -23,48 +22,73 @@ const parallel = require("run-parallel");
 function Sandstorm(options) {
 	this.options = {cache: {prefix: ""}};
 	fast.assign(this.options, options || {});
+	/**
+	 * @type {Object}
+	 */
 	this.schemas = {};
+	/**
+	 * @type {Schema}
+	 */
 	this.Schema = new Schema(this);
+	/**
+	 * @type {mongodb.Db|null}
+	 */
 	this.db = null;
+	/**
+	 * @type {mongodb.MongoClient|null}
+	 */
+	this.client = null;
+	/**
+	 * @type {AMule}
+	 */
 	this.cache = null;
 }
 
 /**
  *
- * @param {String} connectionString
+ * @param {string} connectionString
  * @returns {Promise}
  */
 Sandstorm.prototype.connect = function (connectionString) {
-	return mongodb.MongoClient.connect(connectionString).then((db) => {
-		this.db = db;
-		const mule = new AMule();
-		const aim = new Aim({cache: false});
-		const rush = new Rush({
-			client: this.options.redisClient,
-			prefix: this.options.cache.prefix
-		});
-		const more = new More({
-			db: this.db,
-			prefix: this.options.cache.prefix
-		});
-		mule.use(aim);
-		mule.use(rush);
-		mule.use(more);
-		this.cache = mule;
-		return db;
+	return mongodb.MongoClient.connect(connectionString).then((client) => {
+		this.client = client;
+		return client;
 	});
+};
+/**
+ *
+ * @param {string} dbName
+ * @returns {mongodb.Db}
+ */
+Sandstorm.prototype.use = function (dbName) {
+	this.db = this.client.db(dbName);
+	const mule = new AMule();
+	const aim = new Aim({cache: false});
+	const rush = new Rush({
+		client: this.options.redisClient,
+		prefix: this.options.cache.prefix
+	});
+	const more = new More({
+		db: this.db,
+		prefix: this.options.cache.prefix
+	});
+	mule.use(aim);
+	mule.use(rush);
+	mule.use(more);
+	this.cache = mule;
+	return this.db;
 };
 /**
  *
  */
 Sandstorm.prototype.disconnect = function () {
 	this.cache = null;
-	return this.db && this.db.close();
+	return this.client && this.client.close();
 };
 /**
  *
- * @param {String} name
- * @param {Object} data
+ * @param {string} name
+ * @param {Object} [data]
  * @returns {Model}
  */
 Sandstorm.prototype.create = function (name, data) {
@@ -72,7 +96,7 @@ Sandstorm.prototype.create = function (name, data) {
 };
 /**
  *
- * @param {String} name
+ * @param {string} name
  * @param {Object} [query]
  * @returns {Cursor}
  */
@@ -88,9 +112,13 @@ Sandstorm.prototype.find = function (name, query) {
  */
 Sandstorm.prototype.findOne = function (name, query, options) {
 	return this.db.collection(name).findOne(query, options).then((doc) => {
+		if (!doc) {
+			return doc;
+		}
 		return common.docToModel(this, name, doc);
 	});
 };
+/* istanbul ignore next */
 /**
  *
  * @param name
@@ -103,16 +131,16 @@ Sandstorm.prototype.aggregate = function (name, pipeline, options) {
 };
 /**
  *
- * @param {String} name
+ * @param {string} name
  * @param {String|String[]} ids
- * @param {Object} options
- * @returns {Promise|Promise[]}
+ * @param {Object} [options]
+ * @returns {Promise}
  * FIXME zmienic na callback
  */
 Sandstorm.prototype.get = function (name, ids, options) {
 	options = fast.assign({swallowErrors: false}, options || {});
 	if (this.db === null) {
-		return Promise.reject(new Error("Orm not connected", "ERR_ORM_NOT_CONNECTED"));
+		return Promise.reject(new Error("ERR_ORM_NOT_CONNECTED"));
 	}
 	if (!(ids instanceof Array)) {
 		return new Promise((resolve, reject) => {
@@ -142,5 +170,14 @@ Sandstorm.prototype.get = function (name, ids, options) {
 		wait.push(promise);
 	}
 	return Promise.all(wait);
+};
+/**
+ *
+ * @param {string} name
+ * @param {Object} blueprint
+ * @returns {Object}
+ */
+Sandstorm.prototype.register = function (name, blueprint) {
+	return this.Schema.register(name, blueprint);
 };
 module.exports = Sandstorm;

@@ -39,7 +39,7 @@ Model.prototype.set = function (properties) {
  * @param {Object} properties
  */
 Model.prototype.merge = function (properties) {
-	_merge(this, properties);
+	_set(this, properties, true);
 	return this;
 };
 /**
@@ -177,11 +177,7 @@ function _get(model, options) {
 			return;
 		}
 		if (type in model.orm.schemas) {
-			/*if (!options.dry && property instanceof Model) {
-				properties[propertyKey] = model.data[propertyKey].get();
-			} else {*/
 			properties[propertyKey] = model.data[propertyKey];
-			/*}*/
 			return;
 		}
 		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
@@ -193,9 +189,10 @@ function _get(model, options) {
  *
  * @param {Model} model
  * @param {Object} properties
+ * @param {boolean} [merge]
  * @private
  */
-function _set(model, properties) {
+function _set(model, properties, merge) {
 	model.overwrite = true;
 	model.data = {_id: model.data._id};
 	fast.object.forEach(properties, (item, targetKey) => {
@@ -203,15 +200,17 @@ function _set(model, properties) {
 			if (model.data._id) {
 				throw Error("ERR_CANT_OVERWRITE_ID");
 			}
-			if (typeof item === "string") {
-				item = new ObjectID(item);
+			if (!merge) {
+				if (typeof item === "string") {
+					item = new ObjectID(item);
+				}
+				if (!(item instanceof ObjectID)) {
+					throw TypeError("ERR_ID_MUST_BE_OBJECTID");
+				}
+				model.data[targetKey] = item;
+				model._set[targetKey] = item;
+				return;
 			}
-			if (!(item instanceof ObjectID)) {
-				throw TypeError("ERR_ID_MUST_BE_OBJECTID");
-			}
-			model.data[targetKey] = item;
-			model._set[targetKey] = item;
-			return;
 		}
 		const type = model.schema.properties[targetKey].type;
 		if (type in types) {
@@ -222,39 +221,6 @@ function _set(model, properties) {
 				const data = item;
 				item = new Model(model.orm, type);
 				item.set(data);
-			}
-			if (item instanceof Model) {
-				if (item.name === type) {
-					model.data[targetKey] = item;
-					model._set[targetKey] = item;
-					return;
-				}
-			}
-		}
-		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
-	});
-}
-
-/**
- *
- * @param {Model} model
- * @param {Object} properties
- * @private
- */
-function _merge(model, properties) {
-	fast.object.forEach(properties, (item, targetKey) => {
-		if (targetKey === "_id") {
-			throw Error("ERR_CANT_OVERWRITE_ID");
-		}
-		const type = model.schema.properties[targetKey].type;
-		if (type in types) {
-			return types[type].set(model, model.data, model._set, model.schema.properties[targetKey], targetKey, item);
-		}
-		if (type in model.orm.schemas) {
-			if (common.isPlainObject(item)) {
-				const data = item;
-				item = new Model(model.orm, type);
-				item.merge(data);
 			}
 			if (item instanceof Model) {
 				if (item.name === type) {
@@ -410,7 +376,6 @@ Model[Symbol.for("private")] = {
 	_get,
 	_hydrate,
 	_hydrate_object,
-	_merge,
 	_save_embedded,
 	_save_embedded_model,
 	_save_merge,

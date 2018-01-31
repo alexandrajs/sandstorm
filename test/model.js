@@ -36,7 +36,7 @@ describe("model", () => {
 				done();
 			}).catch(done);
 		});
-		it("", function (done) {
+		it("set + merge", function (done) {
 			const model = orm.create("Base");
 			const date = new Date();
 			const objId = new ObjectID();
@@ -88,17 +88,40 @@ describe("model", () => {
 					]
 				});
 				return model.save();
-			}).then(() => {
+			}).then(async () => {
+				const _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
+				delete _doc._id;
+				assert.deepStrictEqual(_doc, {
+					object: {b: false},
+					array: [
+						1,
+						"a",
+						true
+					]
+				});
 				model.merge({
 					object: {c: 3}
 				});
 				return model.save();
 			}).then(async () => {
+				let _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
+				delete _doc._id;
+				assert.deepStrictEqual(_doc, {
+					object: {
+						b: false,
+						c: 3
+					},
+					array: [
+						1,
+						"a",
+						true
+					]
+				});
 				const cursor = orm.find("Base", {});
 				assert.strictEqual(await cursor.count(), 1);
 				let doc = await cursor.toArray();
 				doc = doc.pop();
-				const _doc = await _db.collection("Base").findOne({_id: new ObjectID(doc.data._id)});
+				_doc = await _db.collection("Base").findOne({_id: new ObjectID(doc.data._id)});
 				assert.deepStrictEqual(doc.data, _doc);
 				assert.deepStrictEqual(doc.data, doc.get());
 				const get = await orm.get("Base", new ObjectID(doc.data._id));
@@ -153,8 +176,6 @@ describe("model", () => {
 		});
 		it("base", function (done) {
 			const model = orm.create("Base");
-			const date = new Date();
-			const objId = new ObjectID();
 			model.set({
 				array: [
 					{

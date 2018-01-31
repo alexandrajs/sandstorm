@@ -193,8 +193,10 @@ function _get(model, options) {
  * @private
  */
 function _set(model, properties, merge) {
-	model.overwrite = true;
-	model.data = {_id: model.data._id};
+	if (!merge) {
+		model.overwrite = true;
+		model.data = {_id: model.data._id};
+	}
 	fast.object.forEach(properties, (item, targetKey) => {
 		if (targetKey === "_id") {
 			if (model.data._id) {
@@ -220,14 +222,19 @@ function _set(model, properties, merge) {
 			if (common.isPlainObject(item)) {
 				const data = item;
 				item = new Model(model.orm, type);
-				item.set(data);
+				if (!merge) {
+					item.set(data);
+				} else {
+					item.merge(data);
+				}
 			}
 			if (item instanceof Model) {
-				if (item.name === type) {
-					model.data[targetKey] = item;
-					model._set[targetKey] = item;
-					return;
+				if (item.name !== type) {
+					throw new TypeError("ERR_WRONG_MODEL_TYPE");
 				}
+				model.data[targetKey] = item;
+				model._set[targetKey] = item;
+				return;
 			}
 		}
 		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");

@@ -118,6 +118,7 @@ Sandstorm.prototype.findOne = function (name, query, options) {
 		return common.docToModel(this, name, doc);
 	});
 };
+/* istanbul ignore next */
 /**
  *
  * @param name

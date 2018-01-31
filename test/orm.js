@@ -76,4 +76,31 @@ describe("orm", () => {
 			}).catch(done);
 		});
 	});
+	describe("get", () => {
+		const idxs = [];
+		const fake_idxs = (new Array(10)).fill("123456789012345678901234");
+		before((done) => {
+			orm.Schema.register("Get", {
+				key: "String",
+				value: "String"
+			});
+			Promise.all((new Array(10)).fill(0).map((_, idx) => {
+				return orm.create("Get").set({key: "" + idx}).save().then(idx => idxs.push(idx));
+			})).then(() => {
+				done();
+			}).catch(done);
+		});
+		it("existing", (done) => {
+			orm.get("Get", idxs).then((docs) => {
+				docs.forEach((doc, idx) => assert(doc.get()._id.toString() === idxs[idx].toString()));
+				done();
+			}).catch(done);
+		});
+		it("not existing", (done) => {
+			orm.get("Get", fake_idxs).then((docs) => {
+				docs.forEach(doc => assert(doc === null));
+				done();
+			}).catch(done);
+		});
+	});
 });

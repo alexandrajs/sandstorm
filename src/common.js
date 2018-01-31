@@ -2,9 +2,7 @@
  * @author Michał Żaloudik <ponury.kostek@gmail.com>
  */
 "use strict";
-const Model = require("./model");
 const fast = require("fast.js");
-const Promise = require("bluebird");
 
 /**
  *
@@ -52,6 +50,9 @@ function getModel(orm, name, id, callback) {
 		if (err) {
 			return callback(err);
 		}
+		if (!doc) {
+			return callback(null, null);
+		}
 		callback(null, orm.create(name, doc));
 	});
 }
@@ -92,19 +93,11 @@ function pathMap(object, path, callback) {
 		}
 		const item = object[current];
 		if (item !== undefined) {
-			/*if (current === "$") {
-				if (object instanceof Array) {
-					if (!parts.length) {
-						return fast.array.forEach(object, (item, key) => callback(item, key, object));
-					}
-					fast.array.forEach(object, (item) => pathMap(item, parts.join("."), callback));
-				}
-			}*/
 			if (!parts.length) {
-				if (item instanceof Array) {
-					return fast.array.forEach(item, callback);
-				}
-				return void callback(item, current, object);
+				return callback(item, current, object);
+			}
+			if (item instanceof Array) {
+				return fast.array.forEach(item, (item) => pathMap(item, parts.join("."), callback));
 			}
 		}
 		object = item;
@@ -195,5 +188,7 @@ module.exports = {
 	pathMap,
 	pushUnique,
 	objectToDotNotation,
+	_objectToDotNotation,
 	modelGet
 };
+const Model = require("./model");

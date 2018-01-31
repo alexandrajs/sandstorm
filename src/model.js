@@ -32,6 +32,7 @@ const ObjectID = require("mongodb").ObjectID;
  */
 Model.prototype.set = function (properties) {
 	_set(this, properties);
+	return this;
 };
 /**
  *
@@ -39,6 +40,7 @@ Model.prototype.set = function (properties) {
  */
 Model.prototype.merge = function (properties) {
 	_merge(this, properties);
+	return this;
 };
 /**
  *
@@ -73,10 +75,11 @@ Model.prototype.hydrate = function (names) {
 	return _hydrate(this, names);
 };
 /**
- *
+ * @returns {Model}
  */
 Model.prototype.dehydrate = function () {
 	_dehydrate(this);
+	return this;
 };
 /**
  *
@@ -276,14 +279,30 @@ function _save_embedded(model) {
 	fast.object.forEach(model.orm.schemas[model.name].dependencies, (paths) => {
 		fast.object.forEach(paths, (search, path) => {
 			common.pathMap(model.data, path, (embedded) => {
-				if (embedded instanceof Model) {
-					common.pushUnique(model._hydrated, embedded.name);
-					wait.push(embedded.save());
+				if (embedded instanceof Array) {
+					return fast.array.forEach(embedded, (embedded) => {
+						_save_embedded_model(model, embedded, wait);
+					});
 				}
+				_save_embedded_model(model, embedded, wait);
 			});
 		});
 	});
 	return Promise.all(wait);
+}
+
+/**
+ *
+ * @param model
+ * @param embedded
+ * @param wait
+ * @private
+ */
+function _save_embedded_model(model, embedded, wait) {
+	if (embedded instanceof Model) {
+		common.pushUnique(model._hydrated, embedded.name);
+		wait.push(embedded.save());
+	}
 }
 
 /**
@@ -297,26 +316,40 @@ function _hydrate(model, names) {
 	const wait = [];
 	const dependencies = model.orm.schemas[model.name].dependencies;
 	fast.array.forEach(names, (name) => {
-		common.pushUnique(model._hydrated, name);
 		const dependency = dependencies[name];
 		if (dependency) {
 			fast.object.forEach(dependency, (searches, path) => {
 				common.pathMap(model.data, path, (embedded, key, target) => {
-					if (!(embedded instanceof Model)) {
-						if (!common.isPlainObject(embedded)) {
-							return;
-						}
-						wait.push(model.orm.get(name, embedded._id).then(_ => {
-							_.hydrate(names);
-							target[key] = _;
-						}));
+					if (embedded instanceof Array) {
+						return fast.array.forEach(embedded, (embedded, key, target) => _hydrate_object(model, names, target, key, name, embedded, wait));
 					}
-					common.pushUnique(model._hydrated, name);
+					_hydrate_object(model, names, target, key, name, embedded, wait);
 				});
 			});
 		}
 	});
 	return Promise.all(wait).then(() => model);
+}
+
+/**
+ *
+ * @param model
+ * @param names
+ * @param target
+ * @param key
+ * @param name
+ * @param embedded
+ * @param wait
+ * @private
+ */
+function _hydrate_object(model, names, target, key, name, embedded, wait) {
+	if (!common.isPlainObject(embedded)) {
+		return;
+	}
+	wait.push(model.orm.get(name, embedded._id).then(_ => {
+		_.hydrate(names);
+		target[key] = _;
+	}));
 }
 
 /**
@@ -328,14 +361,29 @@ function _dehydrate(model) {
 	fast.object.forEach(model.orm.schemas[model.name].dependencies, (paths) => {
 		fast.object.forEach(paths, (search, path) => {
 			common.pathMap(model.data, path, (embedded, key, target) => {
-				if (embedded instanceof Model) {
-					const data = embedded.get();
-					target[key] = _extractProperties(data, search);
-					target[key]._id = data._id;
+				if (embedded instanceof Array) {
+					return fast.array.forEach(embedded, (embedded, key, target) => _dehydrate_model(embedded, key, target, search));
 				}
+				_dehydrate_model(embedded, key, target, search);
 			});
 		});
 	});
+}
+
+/**
+ *
+ * @param embedded
+ * @param key
+ * @param target
+ * @param search
+ * @private
+ */
+function _dehydrate_model(embedded, key, target, search) {
+	if (embedded instanceof Model) {
+		const data = embedded.get();
+		target[key] = _extractProperties(data, search);
+		target[key]._id = data._id;
+	}
 }
 
 /**
@@ -353,3 +401,19 @@ function _extractProperties(object, properties) {
 	}
 	return result;
 }
+
+// noinspection JSUnusedGlobalSymbols
+Model[Symbol.for("private")] = {
+	_dehydrate,
+	_dehydrate_model,
+	_extractProperties,
+	_get,
+	_hydrate,
+	_hydrate_object,
+	_merge,
+	_save_embedded,
+	_save_embedded_model,
+	_save_merge,
+	_save_set,
+	_set
+};

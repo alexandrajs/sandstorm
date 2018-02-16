@@ -92,6 +92,12 @@ Sandstorm.prototype.disconnect = function () {
  * @returns {Model}
  */
 Sandstorm.prototype.create = function (name, data) {
+	if (typeof name !== "string") {
+		throw new TypeError("ERR_MODEL_NAME_MUST_BE_STRING");
+	}
+	if (!(name in this.schemas)) {
+		throw new Error("ERR_MODEL_NOT_EXISTS");
+	}
 	return new Model(this, name, data);
 };
 /**

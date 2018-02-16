@@ -103,4 +103,25 @@ describe("orm", () => {
 			}).catch(done);
 		});
 	});
+	describe("create", () => {
+		before(() => {
+			orm.Schema.register("Create", {
+				key: "String",
+				value: "String"
+			});
+		});
+		it("existing", () => {
+			orm.create("Create");
+		});
+		it("not existing", () => {
+			assert.throws(() => {
+				orm.create("NotExisting");
+			});
+		});
+		it("not existing", () => {
+			assert.throws(() => {
+				orm.create(["NotString"]);
+			});
+		});
+	});
 });

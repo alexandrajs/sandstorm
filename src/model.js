@@ -214,6 +214,9 @@ function _set(model, properties, merge) {
 				return;
 			}
 		}
+		if (!model.schema.properties[targetKey]) {
+			throw new Error("ERR_PROPERTY_NOT_EXISTS");
+		}
 		const type = model.schema.properties[targetKey].type;
 		if (type in types) {
 			return types[type].set(model, model.data, model._set, model.schema.properties[targetKey], targetKey, item);

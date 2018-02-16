@@ -10,20 +10,37 @@ const {ObjectID, MongoClient} = require("mongodb");
  */
 const Orm = require("../");
 describe("model", () => {
+	describe("set", () => {
+		const orm = new Orm();
+		orm.register("Set", {name: "String"});
+		it("not existing prop", () => {
+			const model = orm.create("Set");
+			assert.throws(() => {
+				model.set({notExisting: "key"});
+			});
+		});
+	});
+	it("toJSON", () => {
+		const orm = new Orm();
+		orm.register("ToJson", {name: "String"});
+		const model = orm.create("ToJson");
+		model.set({name: "key"});
+		assert.strictEqual(model.toJSON(), model.data);
+	});
 	describe("base", () => {
 		const orm = new Orm();
-		orm.Schema.register("Base", {
-			array: "Array",
-			bool: "Boolean",
-			date: "Date",
-			mix: "Mixed",
-			number: "Number",
-			object: "Object",
-			objId: "ObjectID",
-			string: "String"
-		});
 		let _db = null;
 		before((done) => {
+			orm.Schema.register("Base", {
+				array: "Array",
+				bool: "Boolean",
+				date: "Date",
+				mix: "Mixed",
+				number: "Number",
+				object: "Object",
+				objId: "ObjectID",
+				string: "String"
+			});
 			orm.connect("mongodb://localhost/sandstorm_test_model_base").then(() => {
 				_db = orm.use("sandstorm_test_model_base");
 				return _db.dropDatabase();

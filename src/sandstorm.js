@@ -141,7 +141,6 @@ Sandstorm.prototype.aggregate = function (name, pipeline, options) {
  * @param {String|String[]} ids
  * @param {Object} [options]
  * @returns {Promise}
- * FIXME zmienic na callback
  */
 Sandstorm.prototype.get = function (name, ids, options) {
 	options = fast.assign({swallowErrors: false}, options || {});

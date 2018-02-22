@@ -145,6 +145,24 @@ describe("model", () => {
 				done();
 			}).catch(done);
 		});
+		it("delete", function (done) {
+			orm.register("Delete", {name: "String"});
+			const model = orm.create("Delete", {name: "test"});
+			let _id = null;
+			model.save().then(async () => {
+				_id = new ObjectID(model.data._id);
+				const _doc = await _db.collection("Delete").findOne({_id});
+				assert.deepStrictEqual(_doc, {
+					_id: model.data._id,
+					name: "test"
+				});
+				return model.delete();
+			}).then(async () => {
+				const _doc = await _db.collection("Delete").findOne({_id});
+				assert(_doc === null);
+				done();
+			}).catch(done);
+		});
 	});
 	describe("embed", () => {
 		let _db = null;

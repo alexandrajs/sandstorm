@@ -181,7 +181,7 @@ function _delete(model) {
 				if (err) {
 					return reject(err);
 				}
-				collection.deleteOne({_id: _id}, (err) => {
+				collection.deleteOne({_id: model.data._id}, (err) => {
 					if (err) {
 						return reject(err);
 					}

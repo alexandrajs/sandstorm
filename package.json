@@ -1,6 +1,6 @@
 {
   "name": "sandstorm",
-  "version": "0.1.4",
+  "version": "0.2.1",
   "description": "Not a MongoDB ORM",
   "main": "./index.js",
   "scripts": {

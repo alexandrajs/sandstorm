@@ -68,6 +68,13 @@ Model.prototype.save = function () {
 };
 /**
  *
+ * @returns {Promise}
+ */
+Model.prototype.delete = function () {
+	return _delete(this);
+};
+/**
+ *
  * @param {Array} names
  * @returns {Promise}
  */
@@ -150,6 +157,37 @@ function _save_merge(model, resolve, reject) {
 					return reject(err);
 				}
 				resolve(_id);
+			});
+		});
+	});
+}
+
+/**
+ *
+ * @param {Model} model
+ * @returns {Promise}
+ * @private
+ */
+function _delete(model) {
+	return new Promise((resolve, reject) => {
+		if (!model.data._id) {
+			return resolve();
+		}
+		model.orm.cache.delete(model.name, model.data._id, (err) => {
+			if (err) {
+				return reject(err);
+			}
+			model.orm.db.collection(model.name, (err, collection) => {
+				if (err) {
+					return reject(err);
+				}
+				collection.deleteOne({_id: _id}, (err) => {
+					if (err) {
+						return reject(err);
+					}
+					model.orm = model.name = model.schema = model.data = model.overwrite = model._set = model._hydrated = null;
+					resolve();
+				});
 			});
 		});
 	});

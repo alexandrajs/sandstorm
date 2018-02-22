@@ -42,6 +42,12 @@ function Sandstorm(options) {
 	 * @type {AMule}
 	 */
 	this.cache = null;
+	/**
+	 *
+	 * @type {string}
+	 * @private
+	 */
+	this._connectionString = "";
 }
 
 /**
@@ -50,7 +56,9 @@ function Sandstorm(options) {
  * @returns {Promise}
  */
 Sandstorm.prototype.connect = function (connectionString) {
+	this._connectionString = "";
 	return mongodb.MongoClient.connect(connectionString).then((client) => {
+		this._connectionString = connectionString;
 		this.client = client;
 		return client;
 	});
@@ -62,20 +70,7 @@ Sandstorm.prototype.connect = function (connectionString) {
  */
 Sandstorm.prototype.use = function (dbName) {
 	this.db = this.client.db(dbName);
-	const mule = new AMule();
-	const aim = new Aim({cache: false});
-	const rush = new Rush({
-		client: this.options.redisClient,
-		prefix: this.options.cache.prefix
-	});
-	const more = new More({
-		db: this.db,
-		prefix: this.options.cache.prefix
-	});
-	mule.use(aim);
-	mule.use(rush);
-	mule.use(more);
-	this.cache = mule;
+	this.cache = _init_cache(this, dbName);
 	return this.db;
 };
 /**
@@ -168,9 +163,7 @@ Sandstorm.prototype.get = function (name, ids, options) {
 			});
 		});
 		if (options.swallowErrors) {
-			promise.catch(() => {
-				return null;
-			});
+			promise.catch(() => null);
 		}
 		wait.push(promise);
 	}
@@ -186,3 +179,25 @@ Sandstorm.prototype.register = function (name, blueprint) {
 	return this.Schema.register(name, blueprint);
 };
 module.exports = Sandstorm;
+const __caches = {};
+
+function _init_cache(orm, name) {
+	const cache_name = orm._connectionString + "_" + name;
+	if (cache_name in __caches) {
+		return __caches[cache_name];
+	}
+	const mule = new AMule();
+	const aim = new Aim({cache: false});
+	const rush = new Rush({
+		client: orm.options.redisClient,
+		prefix: name + "_"
+	});
+	const more = new More({
+		db: orm.db
+	});
+	mule.use(aim);
+	mule.use(rush);
+	mule.use(more);
+	__caches[cache_name] = mule;
+	return mule;
+}

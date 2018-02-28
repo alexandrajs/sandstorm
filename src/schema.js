@@ -55,15 +55,69 @@ Schema.prototype.register = function register(name, blueprint) {
 	}
 	const dependencies = {};
 	const dependents = {};
-	const schema = {
+	const schema = fast.assign(this.orm.schemas[name] || {}, {
 		type: name,
 		properties: {},
 		dependencies: dependencies,
 		dependents: dependents
-	};
+	});
 	this.orm.schemas[name] = schema;
 	schema.properties = _parse(blueprint, [], schema, this.orm);
 	return this.orm.schemas[name];
+};
+Schema.sort = function (blueprints) {
+	const names = Object.keys(blueprints);
+	const deps = {};
+
+	function parse_obj(obj) {
+		const deps = [];
+		fast.forEach(obj, (prop) => {
+			if (typeof prop === "string" && names.includes(prop)) {
+				if (!(prop in types)) {
+					common.pushUnique(deps, prop);
+				}
+			} else if (prop !== null && typeof prop === "object") {
+				const inner_deps = parse_obj(prop);
+				fast.array.forEach(inner_deps, (i) => {
+					common.pushUnique(deps, i);
+				});
+			}
+		});
+		return deps;
+	}
+
+	function get_deps(blueprint) {
+		return parse_obj(blueprint);
+	}
+
+	fast.array.forEach(names, (name) => {
+		deps[name] = get_deps(blueprints[name]);
+	});
+	const list = [];
+
+	function ok(name) {
+		const d = deps[name];
+		for (let i = 0; i < d.length; i++) {
+			if (!~list.indexOf(d[i])) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	while (names.length) {
+		const name = names.shift();
+		if (ok(name)) {
+			list[list.length] = name;
+		} else {
+			names[names.length] = name;
+		}
+	}
+	const sorted = {};
+	fast.array.forEach(list, (name) => {
+		sorted[name] = blueprints[name];
+	});
+	return sorted;
 };
 
 /**
@@ -76,14 +130,12 @@ Schema.prototype.register = function register(name, blueprint) {
  */
 function _parse(object, path, schema, orm) {
 	const output = {};
-	for (const key in object) {
-		if (object.hasOwnProperty(key)) {
-			path.push(key);
-			const property = _parseProperty(object[key], path, schema, orm);
-			output[key] = _expandProperty(property, path, schema, orm);
-			path.pop();
-		}
-	}
+	fast.object.forEach(object, (key) => {
+		path.push(key);
+		const property = _parseProperty(object[key], path, schema, orm);
+		output[key] = _expandProperty(property, path, schema, orm);
+		path.pop();
+	});
 	return output;
 }
 

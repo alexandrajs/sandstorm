@@ -7,6 +7,22 @@ const {StringProperty} = require("../src/properties");
 const Orm = require("../");
 describe("basic types", () => {
 	const types = require("../src/types");
+	it("sort", () => {
+		const deps = {
+			A: {
+				b: "B",
+				obj: {c: "C"}
+			},
+			B: {c: "C"},
+			D: {number: "Number"},
+			C: {
+				string: "String",
+				d: "D"
+			}
+		};
+		const sorted = Object.keys(Orm.Schema.sort(deps));
+		assert.deepEqual(sorted, "D,C,B,A".split(","));
+	});
 	describe("from string", () => {
 		const tests = {
 			"Array": {

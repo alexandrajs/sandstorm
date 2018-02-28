@@ -179,6 +179,7 @@ Sandstorm.prototype.register = function (name, blueprint) {
 	return this.Schema.register(name, blueprint);
 };
 module.exports = Sandstorm;
+module.exports.Schema = Schema;
 const __caches = {};
 
 function _init_cache(orm, name) {

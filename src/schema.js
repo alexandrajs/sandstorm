@@ -55,12 +55,12 @@ Schema.prototype.register = function register(name, blueprint) {
 	}
 	const dependencies = {};
 	const dependents = {};
-	const schema = fast.assign(this.orm.schemas[name] || {}, {
+	const schema = {
 		type: name,
 		properties: {},
 		dependencies: dependencies,
 		dependents: dependents
-	});
+	};
 	this.orm.schemas[name] = schema;
 	schema.properties = _parse(blueprint, [], schema, this.orm);
 	return this.orm.schemas[name];
@@ -130,9 +130,9 @@ Schema.sort = function (blueprints) {
  */
 function _parse(object, path, schema, orm) {
 	const output = {};
-	fast.object.forEach(object, (key) => {
+	fast.object.forEach(object, (value, key) => {
 		path.push(key);
-		const property = _parseProperty(object[key], path, schema, orm);
+		const property = _parseProperty(value, path, schema, orm);
 		output[key] = _expandProperty(property, path, schema, orm);
 		path.pop();
 	});

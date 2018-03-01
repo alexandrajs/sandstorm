@@ -4,6 +4,7 @@
 "use strict";
 const common = require("../common");
 const ObjectID = require("mongodb").ObjectID;
+const ExtError = require("exterror");
 
 /**
  *
@@ -34,7 +35,7 @@ function set(model, target, set, schema, key, value) {
 		value = new ObjectID(value);
 	}
 	if (!(value instanceof ObjectID)) {
-		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
+		throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be instance of ObjectID or string, got " + typeof value);
 	}
 	_set(model, target, set, schema, key, value);
 }

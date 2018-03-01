@@ -6,6 +6,7 @@ const types = require("./index");
 const fast = require("fast.js");
 const common = require("../common");
 const Model = require("../model");
+const ExtError = require("exterror");
 
 /**
  *
@@ -20,10 +21,10 @@ const Model = require("../model");
 function _set(model, target, set, schema, key, value) {
 	const length = value.length;
 	if (schema.min && length < schema.min) {
-		throw new RangeError("ERR_ARRAY_TOO_SHORT");
+		throw new ExtError("ERR_ARRAY_TOO_SHORT");
 	}
 	if (schema.max && length > schema.max) {
-		throw new RangeError("ERR_ARRAY_TOO_LONG");
+		throw new ExtError("ERR_ARRAY_TOO_LONG");
 	}
 	const type = schema.item.type;
 	if (type !== "Mixed") {
@@ -45,7 +46,7 @@ function _set(model, target, set, schema, key, value) {
 					}
 				}
 			}
-			throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
+			throw new ExtError("ERR_WRONG_PROPERTY_TYPE");
 		});
 		return;
 	}
@@ -64,7 +65,7 @@ function _set(model, target, set, schema, key, value) {
  */
 function set(model, target, set, schema, key, value) {
 	if (!(value instanceof Array)) {
-		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
+		throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be instance of Array, got " + typeof value);
 	}
 	_set(model, target, set, schema, key, value);
 }

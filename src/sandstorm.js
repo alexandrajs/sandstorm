@@ -13,6 +13,7 @@ const Aim = require("amule-aim");
 const Rush = require("amule-rush");
 const More = require("amule-more");
 const Promise = require("bluebird");
+const ExtError = require("exterror");
 
 /**
  *
@@ -88,10 +89,10 @@ Sandstorm.prototype.disconnect = function () {
  */
 Sandstorm.prototype.create = function (name, data) {
 	if (typeof name !== "string") {
-		throw new TypeError("ERR_MODEL_NAME_MUST_BE_STRING");
+		throw new ExtError("ERR_MODEL_NAME_MUST_BE_STRING", "Expected parameter 'name' to be string, got " + typeof name);
 	}
 	if (!(name in this.schemas)) {
-		throw new Error("ERR_MODEL_NOT_EXISTS");
+		throw new ExtError("ERR_MODEL_NOT_EXISTS", "Model '" + name + "' do not exists");
 	}
 	return new Model(this, name, data);
 };
@@ -140,7 +141,7 @@ Sandstorm.prototype.aggregate = function (name, pipeline, options) {
 Sandstorm.prototype.get = function (name, ids, options) {
 	options = fast.assign({swallowErrors: false}, options || {});
 	if (this.db === null) {
-		return Promise.reject(new Error("ERR_ORM_NOT_CONNECTED"));
+		return Promise.reject(new ExtError("ERR_ORM_NOT_CONNECTED", "Not connected"));
 	}
 	if (!(ids instanceof Array)) {
 		return new Promise((resolve, reject) => {

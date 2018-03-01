@@ -3,6 +3,7 @@
  */
 "use strict";
 const common = require("../common");
+const ExtError = require("exterror");
 
 /**
  *
@@ -31,7 +32,7 @@ function _set(model, target, set, schema, key, value) {
 function set(model, target, set, schema, key, value) {
 	if (value !== true && value !== false) {
 		if (!(value instanceof Boolean)) {
-			throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
+			throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be boolean, got " + typeof value);
 		}
 		value = value.valueOf();
 	}

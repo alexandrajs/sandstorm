@@ -5,6 +5,7 @@
 const common = require("./common");
 const fast = require("fast.js");
 const Promise = require("bluebird");
+const ExtError = require("exterror");
 
 /**
  *
@@ -108,7 +109,7 @@ Cursor.prototype.count = function (applySkipLimit, options) {
  */
 Cursor.prototype.hydrate = function (names) {
 	if (!(names instanceof Array)) {
-		throw new TypeError("");
+		throw new ExtError("");
 	}
 	this.options.hydrate = names;
 	return this;

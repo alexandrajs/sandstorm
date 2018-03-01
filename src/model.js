@@ -2,6 +2,7 @@
  * @author Michał Żaloudik <ponury.kostek@gmail.com>
  */
 "use strict";
+const ExtError = require("exterror");
 
 /**
  *
@@ -136,7 +137,7 @@ function _save_set(model, resolve, reject) {
  */
 function _save_merge(model, resolve, reject) {
 	if (!model.data._id) {
-		return reject(new Error("ERR_MISSING_ID_ON_MERGE_SAVE"));
+		return reject(new ExtError("ERR_MISSING_ID_ON_MERGE_SAVE", "Missing '_id' on merge save"));
 	}
 	const _id = typeof model.data._id === "string" ? new ObjectID(model.data._id) : model.data._id;
 	if (common.isEmpty(model._set)) {
@@ -218,7 +219,7 @@ function _get(model, options) {
 			properties[propertyKey] = model.data[propertyKey];
 			return;
 		}
-		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
+		throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + propertyKey + "' to be one of base types or model, got " + type);
 	});
 	return properties;
 }
@@ -238,14 +239,14 @@ function _set(model, properties, merge) {
 	fast.object.forEach(properties, (item, targetKey) => {
 		if (targetKey === "_id") {
 			if (model.data._id) {
-				throw Error("ERR_CANT_OVERWRITE_ID");
+				throw new ExtError("ERR_CANT_OVERWRITE_ID", "Can not overwrite model '_id'");
 			}
 			if (!merge) {
 				if (typeof item === "string") {
 					item = new ObjectID(item);
 				}
 				if (!(item instanceof ObjectID)) {
-					throw TypeError("ERR_ID_MUST_BE_OBJECTID");
+					throw new ExtError("ERR_ID_MUST_BE_OBJECTID", "Value of '_id' must be instance of ObjectID or string, got " + typeof item);
 				}
 				model.data[targetKey] = item;
 				model._set[targetKey] = item;
@@ -253,7 +254,7 @@ function _set(model, properties, merge) {
 			}
 		}
 		if (!model.schema.properties[targetKey]) {
-			throw new Error("ERR_PROPERTY_NOT_EXISTS");
+			throw new ExtError("ERR_PROPERTY_NOT_ALLOWED", "Property '" + targetKey + "' not allowed");
 		}
 		const type = model.schema.properties[targetKey].type;
 		if (type in types) {
@@ -271,14 +272,14 @@ function _set(model, properties, merge) {
 			}
 			if (item instanceof Model) {
 				if (item.name !== type) {
-					throw new TypeError("ERR_WRONG_MODEL_TYPE");
+					throw new ExtError("ERR_WRONG_MODEL_TYPE", "Expect value of '" + targetKey + "' to be instance of Model or plain object, got " + typeof item);
 				}
 				model.data[targetKey] = item;
 				model._set[targetKey] = item;
 				return;
 			}
 		}
-		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
+		throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + targetKey + "' to be one of base types or model, got " + type);
 	});
 }
 

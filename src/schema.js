@@ -9,6 +9,7 @@ const {
 	ArrayProperty, BooleanProperty, DateProperty, MixedProperty, ModelProperty, NumberProperty, ObjectProperty, ObjectIDProperty, StringProperty
 } = require("./properties");
 module.exports = Schema;
+const ExtError = require("exterror");
 
 /**
  *
@@ -42,16 +43,16 @@ Schema.prototype.export = function () {
  */
 Schema.prototype.register = function register(name, blueprint) {
 	if (typeof name !== "string") {
-		throw new TypeError("ERR_SCHEMA_NAME_MUST_BE_STRING");
+		throw new ExtError("ERR_SCHEMA_NAME_MUST_BE_STRING", "Expected parameter 'name' to be string, got " + typeof name);
 	}
 	if (name in this.orm.schemas) {
-		throw new Error("ERR_SCHEMA_ALREADY_EXISTS");
+		throw new ExtError("ERR_SCHEMA_ALREADY_EXISTS", "Schema '" + name + "' already exists");
 	}
 	if (!common.isPlainObject(blueprint)) {
-		throw new TypeError("ERR_BLUEPRINT_MUST_BE_PLAIN_OBJECT");
+		throw new ExtError("ERR_BLUEPRINT_MUST_BE_PLAIN_OBJECT", "Expected parameter 'blueprint' to be plain object, got " + typeof name);
 	}
 	if (name in types) {
-		throw new Error("ERR_CANT_OVERWRITE_BASE_TYPE");
+		throw new ExtError("ERR_CANT_OVERWRITE_BASE_TYPE", "Can not overwrite base type '" + name + "'");
 	}
 	const dependencies = {};
 	const dependents = {};
@@ -171,7 +172,7 @@ function _expandProperty(property, path, schema, orm) {
 				return new ModelProperty(fast.object.assign({}, property.options, {type: property.type}), path, schema);
 			}
 	}
-	throw new TypeError("ERR_UNSUPPORTED_SCHEMA_PROPERTY_TYPE");
+	throw new ExtError("ERR_UNSUPPORTED_SCHEMA_PROPERTY_TYPE", "Unsupported property type '" + property.type + "'");
 }
 
 /**
@@ -205,7 +206,7 @@ function _parseArrayProperty(property, path, schema, orm) {
 			options: {item: _expandProperty(_parseObjectProperty(property[0], path, schema, orm), path, schema, orm)}
 		};
 	}
-	throw new TypeError("ERR_UNSUPPORTED_ARRAY_ITEM_TYPE");
+	throw new ExtError("ERR_UNSUPPORTED_ARRAY_ITEM_TYPE", "Unsupported array item type in '" + path.join('.') + "'");
 }
 
 /**
@@ -267,7 +268,7 @@ function _parseProperty(property, path, schema, orm) {
 	} else if (propertyType === "object" && property !== null) {
 		return _parseObjectProperty(property, path, schema, orm);
 	}
-	throw new TypeError("ERR_UNSUPPORTED_OBJECT_PROPERTY_TYPE");
+	throw new ExtError("ERR_UNSUPPORTED_OBJECT_PROPERTY_TYPE", "Unsupported object property type in '" + path.join('.') + "'");
 }
 
 /**

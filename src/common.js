@@ -3,6 +3,7 @@
  */
 "use strict";
 const fast = require("fast.js");
+const ExtError = require("exterror");
 
 /**
  *
@@ -77,13 +78,13 @@ function docToModel(orm, name, doc) {
  */
 function pathMap(object, path, callback) {
 	if (typeof object !== "object" || object === null) {
-		throw new TypeError("ERR_PARAMETER_OBJECT_MUST_BE_OBJECT");
+		throw new ExtError("ERR_PARAMETER_OBJECT_MUST_BE_OBJECT", "Parameter 'object' must be object, got " + typeof object);
 	}
 	if (typeof path !== "string") {
-		throw new TypeError("ERR_PARAMETER_PATH_MUST_BE_STRING");
+		throw new ExtError("ERR_PARAMETER_PATH_MUST_BE_STRING", "Parameter 'path' must be string, got " + typeof path);
 	}
 	if (typeof callback !== "function") {
-		throw new TypeError("ERR_PARAMETER_PATH_MUST_BE_STRING");
+		throw new ExtError("ERR_PARAMETER_CALLBACK_MUST_BE_FUNCTION", "Parameter 'callback' must be function, got " + typeof callback);
 	}
 	const parts = path.split(".");
 	let current;
@@ -161,7 +162,7 @@ function modelGet(target, schema, key) {
 			if (schema.default !== undefined) {
 				return typeof schema.default === "function" ? schema.default() : schema.default;
 			}
-			throw new Error("ERR_MISSING_PROPERTY");
+			throw new ExtError("ERR_MISSING_PROPERTY", "Missing property '" + key + "'");
 		}
 		return;
 	}

@@ -3,6 +3,7 @@
  */
 "use strict";
 const common = require("../common");
+const ExtError = require("exterror");
 
 /**
  *
@@ -30,7 +31,7 @@ function _set(model, target, set, schema, key, value) {
  */
 function set(model, target, set, schema, key, value) {
 	if (!(value instanceof Date)) {
-		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
+		throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be instance of Date, got " + typeof value);
 	}
 	_set(model, target, set, schema, key, value);
 }

@@ -6,6 +6,7 @@ const types = require("./index");
 const fast = require("fast.js");
 const common = require("../common");
 const Model = require("../model");
+const ExtError = require("exterror");
 
 /**
  *
@@ -26,7 +27,7 @@ function _set(model, target, set, schema, key, value) {
 	target[key] = {};
 	fast.object.forEach(value, (item, targetKey) => {
 		if (!schema.properties.hasOwnProperty(targetKey)) {
-			throw new RangeError("ERR_KEY_NOT_ALLOWED");
+			throw new ExtError("ERR_KEY_NOT_ALLOWED", "Key '" + targetKey + "' in '" + key + "' in not allowed ");
 		}
 		const type = schema.properties[targetKey].type;
 		if (type in types) {
@@ -44,7 +45,7 @@ function _set(model, target, set, schema, key, value) {
 				}
 			}
 		}
-		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
+		throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Value of '" + targetKey + "' in '" + key + "' to be " + schema.properties[targetKey].type + ", got " + typeof value);
 	});
 }
 
@@ -60,7 +61,7 @@ function _set(model, target, set, schema, key, value) {
  */
 function set(model, target, set, schema, key, value) {
 	if (!value || !common.isPlainObject(value)) {
-		throw new TypeError("ERR_WRONG_PROPERTY_TYPE");
+		throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be plain object");
 	}
 	_set(model, target, set, schema, key, value);
 }

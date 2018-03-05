@@ -26,13 +26,20 @@ function Cursor(cursor, orm, name, options) {
  *
  * @param options
  */
-Cursor.prototype.toArray = function (options) {
-	options = fast.assign({
+Cursor.prototype.setOptions = function (options) {
+	this.options = fast.assign({
 		raw: false,
 		hydrate: []
 	}, options || {});
+};
+/**
+ *
+ * @param options
+ */
+Cursor.prototype.toArray = function (options) {
+	this.setOptions(options);
 	return this.cursor.toArray().then((docs) => {
-		if (options.raw && !options.hydrate.length) {
+		if (this.options.raw && !this.options.hydrate.length) {
 			return docs;
 		}
 		const models = docs.map((doc) => {

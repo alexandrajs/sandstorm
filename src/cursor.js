@@ -9,10 +9,10 @@ const ExtError = require("exterror");
 
 /**
  *
- * @param cursor
- * @param orm
- * @param name
- * @param options
+ * @param {MongoDB.Cursor} cursor
+ * @param {Sandstorm} orm
+ * @param {string} name
+ * @param {Object} [options]
  * @constructor
  */
 function Cursor(cursor, orm, name, options) {
@@ -28,14 +28,14 @@ function Cursor(cursor, orm, name, options) {
 
 /**
  *
- * @param options
+ * @param {Object} options
  */
 Cursor.prototype.setOptions = function (options) {
 	fast.assign(this.options, options || {});
 };
 /**
  *
- * @param options
+ * @param {Object} [options]
  */
 Cursor.prototype.toArray = function (options) {
 	this.setOptions(options);

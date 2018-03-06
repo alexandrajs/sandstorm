@@ -14,7 +14,7 @@ const ExtError = require("exterror");
 /**
  *
  * @param {Sandstorm} orm
- * @param options
+ * @param {Object} options
  * @constructor
  */
 function Schema(orm, options) {
@@ -23,21 +23,21 @@ function Schema(orm, options) {
 }
 
 /**
- *
+ * Import blueprints
  * @param {Object} schemas
  */
 Schema.prototype.import = function (schemas) {
 	fast.assign(this.orm.schemas, schemas);
 };
 /**
- *
+ * Export registered blueprints
  * @returns {Object}
  */
 Schema.prototype.export = function () {
 	return this.orm.schemas;
 };
 /**
- *
+ * Register blueprint with given name
  * @param {string} name
  * @param {Object} blueprint
  */
@@ -66,6 +66,11 @@ Schema.prototype.register = function register(name, blueprint) {
 	schema.properties = _parse(blueprint, [], schema, this.orm);
 	return this.orm.schemas[name];
 };
+/**
+ * Order blueprints in order to satisfy dependencies
+ * @param {Object} blueprints
+ * @returns {Object}
+ */
 Schema.sort = function (blueprints) {
 	const names = Object.keys(blueprints);
 	const dependencies = {};
@@ -122,12 +127,12 @@ Schema.sort = function (blueprints) {
 };
 
 /**
- *
+ * @private
  * @param {Object}object
  * @param {Array} path
  * @param {Object} schema
  * @param {Sandstorm} orm
- * @returns {{}}
+ * @returns {Object}
  */
 function _parse(object, path, schema, orm) {
 	const output = {};
@@ -141,7 +146,7 @@ function _parse(object, path, schema, orm) {
 }
 
 /**
- *
+ * @private
  * @param property
  * @param {Array} path
  * @param {Object} schema
@@ -178,12 +183,12 @@ function _expandProperty(property, path, schema, orm) {
 }
 
 /**
- *
+ * @private
  * @param property
  * @param {Array} path
  * @param {Object} schema
  * @param {Sandstorm} orm
- * @returns {*}
+ * @returns {{type:string,options:Object}}
  */
 function _parseArrayProperty(property, path, schema, orm) {
 	if (!property.length) {
@@ -208,12 +213,12 @@ function _parseArrayProperty(property, path, schema, orm) {
 }
 
 /**
- *
+ * @private
  * @param property
  * @param {Array} path
  * @param {Object} schema
  * @param {Sandstorm} orm
- * @returns {*}
+ * @returns {{type:string,options:Object}}
  */
 function _parseObjectProperty(property, path, schema, orm) {
 	if (typeof property.type === "string") {
@@ -239,7 +244,7 @@ function _parseObjectProperty(property, path, schema, orm) {
 }
 
 /**
- *
+ * @private
  * @param property
  * @param {Array} path
  * @param {Object} schema
@@ -262,7 +267,7 @@ function _parseProperty(property, path, schema, orm) {
 }
 
 /**
- *
+ * @private
  * @param {Object} schema
  * @param {Array} path
  * @param {String} name
@@ -278,7 +283,7 @@ function _addSchemaDependency(schema, path, name, orm, search) {
 }
 
 /**
- *
+ * @private
  * @param {Object} schema
  * @param {Array} path
  * @param {String} name

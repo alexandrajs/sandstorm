@@ -308,9 +308,9 @@ function _save_embedded(model) {
 
 /**
  *
- * @param model
- * @param embedded
- * @param wait
+ * @param {Model} model
+ * @param {Model} embedded
+ * @param {Array} wait
  * @private
  */
 function _save_embedded_model(model, embedded, wait) {
@@ -348,13 +348,13 @@ function _hydrate(model, names) {
 
 /**
  *
- * @param model
- * @param names
- * @param target
- * @param key
- * @param name
- * @param embedded
- * @param wait
+ * @param {Model} model
+ * @param {Array} names
+ * @param {Object} target
+ * @param {string} key
+ * @param {string} name
+ * @param {Object} embedded
+ * @param {Array} wait
  * @private
  */
 function _hydrate_object(model, names, target, key, name, embedded, wait) {
@@ -387,10 +387,10 @@ function _dehydrate(model) {
 
 /**
  *
- * @param embedded
- * @param key
- * @param target
- * @param search
+ * @param {Model} embedded
+ * @param {string} key
+ * @param {Object} target
+ * @param {Array} search
  * @private
  */
 function _dehydrate_model(embedded, key, target, search) {

@@ -17,7 +17,7 @@ const ExtError = require("exterror");
 
 /**
  *
- * @param options
+ * @param {Object} options
  * @constructor
  */
 function Sandstorm(options) {
@@ -52,7 +52,7 @@ function Sandstorm(options) {
 }
 
 /**
- *
+ * Connect to MongoDD using given connection string
  * @param {string} connectionString
  * @returns {Promise}
  */
@@ -65,7 +65,7 @@ Sandstorm.prototype.connect = function (connectionString) {
 	});
 };
 /**
- *
+ * Select database to use
  * @param {string} dbName
  * @returns {mongodb.Db}
  */
@@ -75,14 +75,14 @@ Sandstorm.prototype.use = function (dbName) {
 	return this.db;
 };
 /**
- *
+ * Disconnects from server
  */
 Sandstorm.prototype.disconnect = function () {
 	this.cache = null;
 	return this.client && this.client.close();
 };
 /**
- *
+ * Create new model
  * @param {string} name
  * @param {Object} [data]
  * @returns {Model}
@@ -97,7 +97,7 @@ Sandstorm.prototype.create = function (name, data) {
 	return new Model(this, name, data);
 };
 /**
- *
+ * Find documents
  * @param {string} name
  * @param {Object} [query]
  * @returns {Cursor}
@@ -106,7 +106,7 @@ Sandstorm.prototype.find = function (name, query) {
 	return new Cursor(this.db.collection(name).find(query), this, name);
 };
 /**
- *
+ * Find one document
  * @param name
  * @param query
  * @param options
@@ -122,7 +122,7 @@ Sandstorm.prototype.findOne = function (name, query, options) {
 };
 /* istanbul ignore next */
 /**
- *
+ * Aggregate
  * @param name
  * @param pipeline
  * @param options
@@ -132,7 +132,7 @@ Sandstorm.prototype.aggregate = function (name, pipeline, options) {
 	return new Cursor(this.db.collection(name).aggregate(pipeline, options), this, name);
 };
 /**
- *
+ * Get one or more models
  * @param {string} name
  * @param {String|String[]} ids
  * @param {Object} [options]
@@ -171,7 +171,7 @@ Sandstorm.prototype.get = function (name, ids, options) {
 	return Promise.all(wait);
 };
 /**
- *
+ * @see Schema.register
  * @param {string} name
  * @param {Object} blueprint
  * @returns {Object}
@@ -183,6 +183,12 @@ module.exports = Sandstorm;
 module.exports.Schema = Schema;
 const __caches = {};
 
+/**
+ * @param orm
+ * @param name
+ * @returns {*}
+ * @private
+ */
 function _init_cache(orm, name) {
 	const cache_name = orm._connectionString + "_" + name;
 	if (cache_name in __caches) {

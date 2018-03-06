@@ -36,6 +36,7 @@ Cursor.prototype.setOptions = function (options) {
 /**
  *
  * @param {Object} [options]
+ * @returns {Promise}
  */
 Cursor.prototype.toArray = function (options) {
 	this.setOptions(options);

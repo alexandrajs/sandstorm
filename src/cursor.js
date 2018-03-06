@@ -19,7 +19,11 @@ function Cursor(cursor, orm, name, options) {
 	this.cursor = cursor;
 	this.orm = orm;
 	this.name = name;
-	this.options = fast.assign({hydrate: []}, options || {});
+	this.options = {
+		hydrate: [],
+		raw: false
+	};
+	this.setOptions(options);
 }
 
 /**
@@ -27,10 +31,7 @@ function Cursor(cursor, orm, name, options) {
  * @param options
  */
 Cursor.prototype.setOptions = function (options) {
-	this.options = fast.assign({
-		raw: false,
-		hydrate: []
-	}, options || {});
+	fast.assign(this.options, options || {});
 };
 /**
  *

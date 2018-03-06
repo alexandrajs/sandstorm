@@ -5,6 +5,49 @@
 const assert = require("assert");
 const {StringProperty} = require("../src/properties");
 const Orm = require("../");
+describe("embedded schemas dependencies", () => {
+	describe("in array", () => {
+		const orm = new Orm();
+		orm.register("Sub", {
+			name: "String"
+		});
+		it("from string", () => {
+			orm.register("FromString", {sub: ["Sub"]});
+			assert.deepStrictEqual(orm.schemas.FromString.dependencies, {Sub: {sub: []}});
+		});
+		it("from object", () => {
+			orm.register("FromObject", {
+				sub: {
+					type: "Array",
+					item: {
+						type: "Sub",
+						search: ["name"]
+					}
+				}
+			});
+			assert.deepStrictEqual(orm.schemas.FromObject.dependencies, {Sub: {sub: ["name"]}});
+		});
+	});
+	describe("in object", () => {
+		const orm = new Orm();
+		orm.register("Sub", {
+			name: "String"
+		});
+		it("from string", () => {
+			orm.register("FromString", {sub: "Sub"});
+			assert.deepStrictEqual(orm.schemas.FromString.dependencies, {Sub: {sub: []}});
+		});
+		it("from object", () => {
+			orm.register("FromObject", {
+				sub: {
+					type: "Sub",
+					search: ["name"]
+				}
+			});
+			assert.deepStrictEqual(orm.schemas.FromObject.dependencies, {Sub: {sub: ["name"]}});
+		});
+	});
+});
 describe("basic types", () => {
 	const types = require("../src/types");
 	it("sort", () => {

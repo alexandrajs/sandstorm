@@ -68,38 +68,38 @@ Schema.prototype.register = function register(name, blueprint) {
 };
 Schema.sort = function (blueprints) {
 	const names = Object.keys(blueprints);
-	const deps = {};
+	const dependencies = {};
 
-	function parse_obj(obj) {
-		const deps = [];
-		fast.forEach(obj, (prop) => {
-			if (typeof prop === "string" && names.includes(prop)) {
-				if (!(prop in types)) {
-					common.pushUnique(deps, prop);
+	function parse_obj(object) {
+		const dependencies = [];
+		fast.forEach(object, (property) => {
+			if (typeof property === "string" && names.includes(property)) {
+				if (!(property in types)) {
+					common.pushUnique(dependencies, property);
 				}
-			} else if (prop !== null && typeof prop === "object") {
-				const inner_deps = parse_obj(prop);
-				fast.array.forEach(inner_deps, (i) => {
-					common.pushUnique(deps, i);
+			} else if (property !== null && typeof property === "object") {
+				const inner_dependencies = parse_obj(property);
+				fast.array.forEach(inner_dependencies, (index) => {
+					common.pushUnique(dependencies, index);
 				});
 			}
 		});
-		return deps;
+		return dependencies;
 	}
 
-	function get_deps(blueprint) {
+	function get_dependencies(blueprint) {
 		return parse_obj(blueprint);
 	}
 
 	fast.array.forEach(names, (name) => {
-		deps[name] = get_deps(blueprints[name]);
+		dependencies[name] = get_dependencies(blueprints[name]);
 	});
 	const list = [];
 
 	function ok(name) {
-		const d = deps[name];
-		for (let i = 0; i < d.length; i++) {
-			if (!~list.indexOf(d[i])) {
+		const dependency = dependencies[name];
+		for (let index = 0; index < dependency.length; index++) {
+			if (!~list.indexOf(dependency[index])) {
 				return false;
 			}
 		}
@@ -169,6 +169,8 @@ function _expandProperty(property, path, schema, orm) {
 			return new MixedProperty(property.options);
 		default:
 			if (property.type in orm.schemas) {
+				_addSchemaDependency(schema, path, property.type, orm, property.options.search);
+				_addSchemaDependent(schema, path, property.type, orm, property.options.search);
 				return new ModelProperty(fast.object.assign({}, property.options, {type: property.type}), path, schema);
 			}
 	}
@@ -191,10 +193,6 @@ function _parseArrayProperty(property, path, schema, orm) {
 		};
 	}
 	if (typeof property[0] === "string") {
-		if (property[0] in orm.schemas) {
-			_addSchemaDependency(schema, path, property[0], orm, []);
-			_addSchemaDependent(schema, path, property[0], orm, []);
-		}
 		return {
 			type: "Array",
 			options: {item: _expandProperty({type: property[0]}, path, schema, orm)}
@@ -206,7 +204,7 @@ function _parseArrayProperty(property, path, schema, orm) {
 			options: {item: _expandProperty(_parseObjectProperty(property[0], path, schema, orm), path, schema, orm)}
 		};
 	}
-	throw new ExtError("ERR_UNSUPPORTED_ARRAY_ITEM_TYPE", "Unsupported array item type in '" + path.join('.') + "'");
+	throw new ExtError("ERR_UNSUPPORTED_ARRAY_ITEM_TYPE", "Unsupported array item type in '" + path.join(".") + "'");
 }
 
 /**
@@ -219,10 +217,6 @@ function _parseArrayProperty(property, path, schema, orm) {
  */
 function _parseObjectProperty(property, path, schema, orm) {
 	if (typeof property.type === "string") {
-		if (property.type in orm.schemas) {
-			_addSchemaDependency(schema, path, property.type, orm, property.search);
-			_addSchemaDependent(schema, path, property.type, orm, property.search);
-		}
 		if (property.type === "Object" && typeof property.properties === "object" && property.properties !== null) {
 			property.properties = _parse(property.properties, path, schema, orm);
 		}
@@ -255,10 +249,6 @@ function _parseObjectProperty(property, path, schema, orm) {
 function _parseProperty(property, path, schema, orm) {
 	const propertyType = typeof property;
 	if (propertyType === "string") {
-		if (property in orm.schemas) {
-			_addSchemaDependency(schema, path, property, orm, []);
-			_addSchemaDependent(schema, path, property, orm, []);
-		}
 		return {
 			type: property,
 			options: {}
@@ -268,7 +258,7 @@ function _parseProperty(property, path, schema, orm) {
 	} else if (propertyType === "object" && property !== null) {
 		return _parseObjectProperty(property, path, schema, orm);
 	}
-	throw new ExtError("ERR_UNSUPPORTED_OBJECT_PROPERTY_TYPE", "Unsupported object property type in '" + path.join('.') + "'");
+	throw new ExtError("ERR_UNSUPPORTED_OBJECT_PROPERTY_TYPE", "Unsupported object property type in '" + path.join(".") + "'");
 }
 
 /**

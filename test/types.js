@@ -3,8 +3,44 @@
  * @ignore
  */
 const assert = require("assert");
+const ObjectID = require("mongodb").ObjectID;
 const Orm = require("../");
 describe("types", () => {
+	describe("save + merge", () => {
+		describe("ObjectID", () => {
+			const orm = new Orm();
+			orm.Schema.register("test", {key: "ObjectID"});
+			let _db;
+			before((done) => {
+				orm.connect("mongodb://localhost/sandstorm_test_types").then(() => {
+					_db = orm.use("sandstorm_test_types");
+					return _db.dropDatabase();
+				}).then(() => {
+					done();
+				}).catch(done);
+			});
+			[
+				{
+					schema: {type: "ObjectID"},
+					value: new ObjectID(),
+					name: "instance"
+				},
+				{
+					schema: {type: "ObjectID"},
+					value: "123456789012345678901234",
+					name: "string"
+				}
+			].forEach((test) => {
+				it(test.name, (done) => {
+					const model = orm.create("test");
+					model.set({key: test.value});
+					model.save().then(_ => {
+						return model.merge({key: test.value}).save().then(_ => done());
+					}).catch(done);
+				});
+			});
+		});
+	});
 	describe("set get", () => {
 		describe("valid", () => {
 			describe("Array", () => {

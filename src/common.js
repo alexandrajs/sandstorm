@@ -140,7 +140,7 @@ function objectToDotNotation(object, options) {
 function _objectToDotNotation(object, result, path, options) {
 	fast.object.forEach(object, (value, key) => {
 		path.push(key);
-		if (typeof value === "object" && value !== null) {
+		if (isPlainObject(value)) {
 			_objectToDotNotation(value, result, path, options);
 		} else {
 			result[path.join(".")] = value;

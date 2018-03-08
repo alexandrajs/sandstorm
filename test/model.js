@@ -181,23 +181,23 @@ describe("model", () => {
 						type: "Array",
 						item: {
 							type: "Embed",
-							search: ["name"]
+							embed: ["name"]
 						}
 					},
 					embed: {
 						type: "Embed",
-						search: ["name"]
+						embed: ["name"]
 					},
 					object: {
 						array: [
 							{
 								type: "Embed",
-								search: ["name"]
+								embed: ["name"]
 							}
 						],
 						embed: {
 							type: "Embed",
-							search: ["name"]
+							embed: ["name"]
 						}
 					}
 				});

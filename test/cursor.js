@@ -21,7 +21,7 @@ orm.Schema.register("Base", {
 	array: [
 		{
 			type: "Sub",
-			search: ["name"]
+			embed: ["name"]
 		}
 	]
 });

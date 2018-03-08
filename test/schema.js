@@ -21,7 +21,7 @@ describe("embedded schemas dependencies", () => {
 					type: "Array",
 					item: {
 						type: "Sub",
-						search: ["name"]
+						embed: ["name"]
 					}
 				}
 			});
@@ -41,7 +41,7 @@ describe("embedded schemas dependencies", () => {
 			orm.register("FromObject", {
 				sub: {
 					type: "Sub",
-					search: ["name"]
+					embed: ["name"]
 				}
 			});
 			assert.deepStrictEqual(orm.schemas.FromObject.dependencies, {Sub: {sub: ["name"]}});

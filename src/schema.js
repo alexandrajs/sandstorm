@@ -40,8 +40,9 @@ Schema.prototype.export = function () {
  * Register blueprint with given name
  * @param {string} name
  * @param {Object} blueprint
+ * @param {Object} options
  */
-Schema.prototype.register = function register(name, blueprint) {
+Schema.prototype.register = function register(name, blueprint, options) {
 	if (typeof name !== "string") {
 		throw new ExtError("ERR_SCHEMA_NAME_MUST_BE_STRING", "Expected parameter 'name' to be string, got " + typeof name);
 	}
@@ -49,7 +50,10 @@ Schema.prototype.register = function register(name, blueprint) {
 		throw new ExtError("ERR_SCHEMA_ALREADY_EXISTS", "Schema '" + name + "' already exists");
 	}
 	if (!common.isPlainObject(blueprint)) {
-		throw new ExtError("ERR_BLUEPRINT_MUST_BE_PLAIN_OBJECT", "Expected parameter 'blueprint' to be plain object, got " + typeof name);
+		throw new ExtError("ERR_BLUEPRINT_MUST_BE_PLAIN_OBJECT", "Expected parameter 'blueprint' to be plain object, got " + typeof blueprint);
+	}
+	if (options && !common.isPlainObject(options)) {
+		throw new ExtError("ERR_OPTIONS_MUST_BE_PLAIN_OBJECT", "Expected parameter 'options' to be plain object, got " + typeof options);
 	}
 	if (name in types) {
 		throw new ExtError("ERR_CANT_OVERWRITE_BASE_TYPE", "Can not overwrite base type '" + name + "'");
@@ -174,8 +178,8 @@ function _expandProperty(property, path, schema, orm) {
 			return new MixedProperty(property.options);
 		default:
 			if (property.type in orm.schemas) {
-				_addSchemaDependency(schema, path, property.type, orm, property.options.search);
-				_addSchemaDependent(schema, path, property.type, orm, property.options.search);
+				_addSchemaDependency(schema, path, property.type, orm, property.options.embed);
+				_addSchemaDependent(schema, path, property.type, orm, property.options.embed);
 				return new ModelProperty(fast.object.assign({}, property.options, {type: property.type}), path, schema);
 			}
 	}
@@ -272,14 +276,14 @@ function _parseProperty(property, path, schema, orm) {
  * @param {Array} path
  * @param {String} name
  * @param {Sandstorm} orm
- * @param {Array} search
+ * @param {Array} embed
  */
-function _addSchemaDependency(schema, path, name, orm, search) {
+function _addSchemaDependency(schema, path, name, orm, embed) {
 	const path_str = path.join(".");
 	if (!(name in schema.dependencies)) {
 		schema.dependencies[name] = {};
 	}
-	fast.object.assign(schema.dependencies[name], {[path_str]: search || []});
+	fast.object.assign(schema.dependencies[name], {[path_str]: embed || []});
 }
 
 /**
@@ -288,15 +292,15 @@ function _addSchemaDependency(schema, path, name, orm, search) {
  * @param {Array} path
  * @param {String} name
  * @param {Sandstorm} orm
- * @param {Array} search
+ * @param {Array} embed
  */
-function _addSchemaDependent(schema, path, name, orm, search) {
+function _addSchemaDependent(schema, path, name, orm, embed) {
 	const path_str = path.join(".");
 	const target = orm.schemas[name];
 	if (!(schema.type in target.dependents)) {
 		target.dependents[schema.type] = {};
 	}
-	fast.object.assign(target.dependents[schema.type], {[path_str]: search || []});
+	fast.object.assign(target.dependents[schema.type], {[path_str]: embed || []});
 }
 
 // noinspection JSUnusedGlobalSymbols

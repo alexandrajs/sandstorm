@@ -18,6 +18,7 @@ const ExtError = require("exterror");
 /**
  *
  * @param {Object} options
+ * @param {Object|Redis} options.redisClient
  * @constructor
  */
 function Sandstorm(options) {
@@ -32,11 +33,11 @@ function Sandstorm(options) {
 	 */
 	this.Schema = new Schema(this);
 	/**
-	 * @type {mongodb.Db|null}
+	 * @type {Db|null}
 	 */
 	this.db = null;
 	/**
-	 * @type {mongodb.MongoClient|null}
+	 * @type {MongoClient|null}
 	 */
 	this.client = null;
 	/**
@@ -54,7 +55,7 @@ function Sandstorm(options) {
 /**
  * Connect to MongoDD using given connection string
  * @param {string} connectionString
- * @returns {Promise}
+ * @returns {Promise<MongoClient>}
  */
 Sandstorm.prototype.connect = function (connectionString) {
 	this._connectionString = "";
@@ -67,12 +68,12 @@ Sandstorm.prototype.connect = function (connectionString) {
 /**
  * Select database to use
  * @param {string} dbName
- * @returns {mongodb.Db}
+ * @returns {Promise<Db>}
  */
 Sandstorm.prototype.use = function (dbName) {
 	this.db = this.client.db(dbName);
 	this.cache = _init_cache(this, dbName);
-	return this.db;
+	return _ensure_indexes(this.db, this.schemas);
 };
 /**
  * Disconnects from server
@@ -103,7 +104,7 @@ Sandstorm.prototype.create = function (name, data) {
  * @returns {Cursor}
  */
 Sandstorm.prototype.find = function (name, query) {
-	return new Cursor(this.db.collection(name).find(query), this, name);
+	return new Cursor(this.db.collection(name).find(query), this, name, this.schemas[name].options);
 };
 /**
  * Find one document
@@ -117,7 +118,11 @@ Sandstorm.prototype.findOne = function (name, query, options) {
 		if (!doc) {
 			return doc;
 		}
-		return common.docToModel(this, name, doc);
+		const model = common.docToModel(this, name, doc);
+		if (this.schemas[name].options.hydrate && this.schemas[name].options.hydrate.length) {
+			return model.hydrate(this.schemas[name].options.hydrate);
+		}
+		return model;
 	});
 };
 /* istanbul ignore next */
@@ -126,10 +131,10 @@ Sandstorm.prototype.findOne = function (name, query, options) {
  * @param name
  * @param pipeline
  * @param options
- * @returns {Cursor}
+ * @returns {AggregationCursor}
  */
 Sandstorm.prototype.aggregate = function (name, pipeline, options) {
-	return new Cursor(this.db.collection(name).aggregate(pipeline, options), this, name);
+	return this.db.collection(name).aggregate(pipeline, options);
 };
 /**
  * Get one or more models
@@ -184,9 +189,9 @@ module.exports.Schema = Schema;
 const __caches = {};
 
 /**
- * @param orm
- * @param name
- * @returns {*}
+ * @param {Sandstorm} orm
+ * @param {string} name
+ * @returns {AMule}
  * @private
  */
 function _init_cache(orm, name) {
@@ -208,4 +213,35 @@ function _init_cache(orm, name) {
 	mule.use(more);
 	__caches[cache_name] = mule;
 	return mule;
+}
+
+/**
+ *
+ * @param {Db} db
+ * @param {Object} schemas
+ * @returns {Promise<Db>}
+ * @private
+ */
+function _ensure_indexes(db, schemas) {
+	const wait = [];
+	fast.object.forEach(schemas, (schema, name) => {
+		const indexes = schema.options.indexes;
+		indexes && wait.push(new Promise((resolve, reject) => {
+			db.collection(name, (err, collection) => {
+				if (err) {
+					return reject(err);
+				}
+				resolve(Promise.all(fast.array.map(indexes, (index) => {
+					if (!common.isPlainObject(index)) {
+						return Promise.reject(new ExtError("ERR_COLLECTION_INDEX_MUST_BE_OBJECT", "Collection index must be plain object"));
+					}
+					if (typeof index.fieldOrSpec !== "string" && !common.isPlainObject(index.fieldOrSpec)) {
+						return Promise.reject(new ExtError("ERR_COLLECTION_INDEX_FIELDORSPEC_MUST_BE_OBJECTOR_STRING", "Collection index.fieldOrSpec must be plain object or string"));
+					}
+					return collection.createIndex(index.fieldOrSpec, fast.assign({collation: fast.object.clone(schema.options.collation || {})}, index.options || {}));
+				})));
+			});
+		}));
+	});
+	return Promise.all(wait).then(() => db);
 }

@@ -14,7 +14,7 @@ const ExtError = require("exterror");
 /**
  *
  * @param {Sandstorm} orm
- * @param {Object} options
+ * @param {Object} [options]
  * @constructor
  */
 function Schema(orm, options) {
@@ -40,9 +40,11 @@ Schema.prototype.export = function () {
  * Register blueprint with given name
  * @param {string} name
  * @param {Object} blueprint
- * @param {Object} options
+ * @param {Object} blueprint.$options
+ * @param {Array<{fieldOrSpec: String|Object, [collation]:Object}>} blueprint.$options.indexes
+ * @param {Object} blueprint.$options.collation
  */
-Schema.prototype.register = function register(name, blueprint, options) {
+Schema.prototype.register = function register(name, blueprint) {
 	if (typeof name !== "string") {
 		throw new ExtError("ERR_SCHEMA_NAME_MUST_BE_STRING", "Expected parameter 'name' to be string, got " + typeof name);
 	}
@@ -52,20 +54,26 @@ Schema.prototype.register = function register(name, blueprint, options) {
 	if (!common.isPlainObject(blueprint)) {
 		throw new ExtError("ERR_BLUEPRINT_MUST_BE_PLAIN_OBJECT", "Expected parameter 'blueprint' to be plain object, got " + typeof blueprint);
 	}
-	if (options && !common.isPlainObject(options)) {
-		throw new ExtError("ERR_OPTIONS_MUST_BE_PLAIN_OBJECT", "Expected parameter 'options' to be plain object, got " + typeof options);
+	if (blueprint.$options && !common.isPlainObject(blueprint.$options)) {
+		throw new ExtError("ERR_OPTIONS_MUST_BE_PLAIN_OBJECT", "Expected parameter 'options' to be plain object, got " + typeof blueprint.$options);
 	}
 	if (name in types) {
 		throw new ExtError("ERR_CANT_OVERWRITE_BASE_TYPE", "Can not overwrite base type '" + name + "'");
 	}
 	const dependencies = {};
 	const dependents = {};
+	/**
+	 *
+	 * @type {{type: string, properties: {}, dependencies: {}, dependents: {}, options: {indexes: Array<{fieldOrSpec: String|Object, collation?: Object}>, collation: Object}|{}}}
+	 */
 	const schema = {
 		type: name,
 		properties: {},
 		dependencies: dependencies,
-		dependents: dependents
+		dependents: dependents,
+		options: blueprint.$options || {}
 	};
+	delete blueprint.$options;
 	this.orm.schemas[name] = schema;
 	schema.properties = _parse(blueprint, [], schema, this.orm);
 	return this.orm.schemas[name];
@@ -81,7 +89,10 @@ Schema.sort = function (blueprints) {
 
 	function parse_obj(object) {
 		const dependencies = [];
-		fast.forEach(object, (property) => {
+		fast.forEach(object, (property, key) => {
+			if (key[0] === "$") {
+				return;
+			}
 			if (typeof property === "string" && names.includes(property)) {
 				if (!(property in types)) {
 					common.pushUnique(dependencies, property);

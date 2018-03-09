@@ -27,7 +27,9 @@ let _db = null;
 describe("orm", () => {
 	before((done) => {
 		orm.connect("mongodb://localhost/sandstorm_test_orm").then(() => {
-			_db = orm.use("sandstorm_test_orm");
+			return orm.use("sandstorm_test_orm");
+		}).then((db) => {
+			_db = db;
 			return _db.dropDatabase();
 		}).then(() => {
 			done();

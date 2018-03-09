@@ -29,7 +29,9 @@ let _db = null;
 describe("cursor", () => {
 	before((done) => {
 		orm.connect("mongodb://localhost/sandstorm_test_cursor").then(() => {
-			_db = orm.use("sandstorm_test_cursor");
+			return orm.use("sandstorm_test_cursor");
+		}).then((db) => {
+			_db = db;
 			return _db.dropDatabase();
 		}).then(() => {
 			const num = 10;

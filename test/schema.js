@@ -5,6 +5,36 @@
 const assert = require("assert");
 const {StringProperty} = require("../src/properties");
 const Orm = require("../");
+describe("$options", () => {
+	it("", (done) => {
+		const orm = new Orm();
+		orm.register("Sub", {
+			name: "String",
+			$options: {
+				indexes: [
+					{
+						fieldOrSpec: {name: 1},
+						options: {unique: true}
+					}
+				],
+				collation: {
+					locale: "pl",
+					strength: 2
+				}
+			}
+		});
+		orm.connect("mongodb://localhost/sandstorm_test_schema_options").then(() => {
+			return orm.use("sandstorm_test_schema_options");
+		}).then((db) => {
+			return db.collection("Sub");
+		}).then((collection) => {
+			return collection.listIndexes().toArray();
+		}).then((res) => {
+			console.log(res);
+			done();
+		}).catch(done);
+	});
+});
 describe("embedded schemas dependencies", () => {
 	describe("in array", () => {
 		const orm = new Orm();
@@ -223,7 +253,8 @@ describe("basic types", () => {
 					value: new StringProperty({})
 				},
 				dependencies: {},
-				dependents: {}
+				dependents: {},
+				options: {}
 			}
 		});
 	});

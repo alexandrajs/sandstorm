@@ -36,7 +36,9 @@ function _set(model, target, set, schema, key, value) {
 			}
 			if (type in model.orm.schemas) {
 				if (common.isPlainObject(item)) {
-					item = new Model(model.orm, type, item);
+					const data = item;
+					item = new Model(model.orm, type);
+					item.set(data);
 				}
 				if (item instanceof Model) {
 					if (item.name === type) {

@@ -166,18 +166,7 @@ function modelGet(target, schema, key) {
 		}
 		return;
 	}
-	switch (schema.type) {
-		case "Array":
-			return fast.cloneArray(target[key]);
-		case "Date":
-			return new Date(target[key].toJSON());
-		case "Mixed":
-			return typeof target[key] === "object" && target[key] !== null ? fast.clone(target[key]) : target[key];
-		case "Object":
-			return fast.object.clone(target[key]);
-		default:
-			return target[key];
-	}
+	return target[key];
 }
 
 module.exports = {

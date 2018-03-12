@@ -77,6 +77,15 @@ Cursor.prototype.forEach = function () {
 };
 /**
  *
+ * @param {Object} value
+ * @returns {Cursor}
+ */
+Cursor.prototype.project = function (value) {
+	this.cursor.project(value);
+	return this;
+};
+/**
+ *
  * @param {Object} collation
  * @returns {Cursor}
  */

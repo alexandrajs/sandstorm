@@ -197,14 +197,14 @@ function _delete(model) {
 /**
  *
  * @param {Model} model
- * @param {Object} options
+ * @param {Object} [options]
  * @returns {Object}
  * @private
  */
 function _get(model, options) {
 	const properties = {};
 	if (model.data._id) {
-		properties._id = model.data._id;
+		properties._id = new ObjectID(model.data._id);
 	}
 	fast.object.forEach(model.schema.properties, (property, propertyKey) => {
 		const type = model.schema.properties[propertyKey].type;

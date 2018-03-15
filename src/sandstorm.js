@@ -80,7 +80,7 @@ Sandstorm.prototype.use = function (dbName) {
  */
 Sandstorm.prototype.disconnect = function () {
 	this.cache = null;
-	return this.client && this.client.close();
+	return this.client && this.client.close(true);
 };
 /**
  * Create new model
@@ -100,11 +100,12 @@ Sandstorm.prototype.create = function (name, data) {
 /**
  * Find documents
  * @param {string} name
- * @param {Object} [query]
+ * @param {Object} query
+ * @param {Object} [options]
  * @returns {Cursor}
  */
-Sandstorm.prototype.find = function (name, query) {
-	return new Cursor(this.db.collection(name).find(query), this, name, this.schemas[name].options);
+Sandstorm.prototype.find = function (name, query, options) {
+	return new Cursor(this.db.collection(name).find(query, fast.assign({}, this.schemas[name].options || {}, options || {})), this, name, this.schemas[name].options);
 };
 /**
  * Find one document

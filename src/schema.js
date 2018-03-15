@@ -314,6 +314,9 @@ function _addSchemaDependent(schema, path, name, orm, embed) {
 	fast.object.assign(target.dependents[schema.type], {[path_str]: embed || []});
 }
 
+function _setUniqueIndexOption(schema, property, path) {
+}
+
 // noinspection JSUnusedGlobalSymbols
 Schema[Symbol.for("private")] = {
 	_addSchemaDependency,
@@ -322,5 +325,6 @@ Schema[Symbol.for("private")] = {
 	_parse,
 	_parseArrayProperty,
 	_parseObjectProperty,
-	_parseProperty
+	_parseProperty,
+	_setUniqueIndexOption
 };

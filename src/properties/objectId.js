@@ -11,6 +11,7 @@
 function ObjectIDProperty(options) {
 	this.type = "ObjectID";
 	this.required = options.required || false;
+	this.unique = options.unique || false;
 	this.default = options.default;
 }
 

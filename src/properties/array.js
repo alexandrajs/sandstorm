@@ -15,6 +15,7 @@ function ArrayProperty(options) {
 	}
 	this.type = "Array";
 	this.required = options.required || false;
+	this.unique = options.unique || false;
 	this.default = options.default;
 	this.item = options.item !== undefined ? options.item : new MixedProperty({type: "Mixed"});
 	this.min = options.min;

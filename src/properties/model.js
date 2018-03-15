@@ -12,6 +12,7 @@
 function ModelProperty(options, path) {
 	this.type = options.type;
 	this.required = options.required || false;
+	this.unique = options.unique || false;
 	this.embed = options.embed;
 	this.path = path;
 }

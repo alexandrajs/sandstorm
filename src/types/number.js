@@ -36,7 +36,10 @@ function _set(model, target, set, schema, key, value) {
  * @returns {*}
  */
 function set(model, target, set, schema, key, value) {
-	if (typeof value !== "number" || value !== value) {
+	if (value !== value) {
+		throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be number, got NaN");
+	}
+	if (typeof value !== "number") {
 		if (!(value instanceof Number)) {
 			throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be number, got " + typeof value);
 		} else {

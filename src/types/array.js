@@ -27,32 +27,32 @@ function _set(model, target, set, schema, key, value) {
 		throw new ExtError("ERR_ARRAY_TOO_LONG");
 	}
 	const type = schema.item.type;
-	if (type !== "Mixed") {
-		set[key] = [];
-		target[key] = [];
-		fast.forEach(value, (item, targetKey) => {
-			if (type in types) {
-				return types[type].set(model, target[key], set[key], schema.item, targetKey, item);
-			}
-			if (type in model.orm.schemas) {
-				if (common.isPlainObject(item)) {
-					const data = item;
-					item = new Model(model.orm, type);
-					item.set(data);
-				}
-				if (item instanceof Model) {
-					if (item.name === type) {
-						target[key][targetKey] = item;
-						set[key][targetKey] = item;
-						return;
-					}
-				}
-			}
-			throw new ExtError("ERR_WRONG_PROPERTY_TYPE");
-		});
+	if (type === "Mixed") {
+		set[key] = target[key] = fast.cloneArray(value);
 		return;
 	}
-	set[key] = target[key] = fast.cloneArray(value);
+	set[key] = [];
+	target[key] = [];
+	fast.forEach(value, (item, targetKey) => {
+		if (type in types) {
+			return types[type].set(model, target[key], set[key], schema.item, targetKey, item);
+		}
+		if (type in model.orm.schemas) {
+			if (common.isPlainObject(item)) {
+				const data = item;
+				item = new Model(model.orm, type);
+				item.set(data);
+			}
+			if (item instanceof Model) {
+				if (item.name === type) {
+					target[key][targetKey] = item;
+					set[key][targetKey] = item;
+					return;
+				}
+			}
+		}
+		throw new ExtError("ERR_WRONG_PROPERTY_TYPE");
+	});
 }
 
 /**

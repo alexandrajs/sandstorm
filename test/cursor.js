@@ -18,6 +18,7 @@ orm.register("Sub", {
 	value: "String"
 });
 orm.Schema.register("Base", {
+	id: "Number",
 	array: [
 		{
 			type: "Sub",
@@ -48,6 +49,7 @@ describe("cursor", () => {
 			for (let a = 0; a < num; a++) {
 				const model = orm.create("Base");
 				model.set({
+					id: a,
 					array: [
 						{
 							name: "One" + a,
@@ -83,6 +85,15 @@ describe("cursor", () => {
 		}).then(() => {
 			done();
 		}).catch(done);
+	});
+	it("project", (done) => {
+		orm.find("Base", {"array.name": "One5"}).project({array: 0}).toArray()
+			.then((results) => {
+				const doc = results.pop().get();
+				assert.equal(doc.id, 5);
+				assert.equal(typeof doc.array, "undefined");
+				done();
+			}).catch(done);
 	});
 	it("hydrate", (done) => {
 		orm.find("Base", {"array.name": "One5"}).hydrate(["Sub"]).toArray()

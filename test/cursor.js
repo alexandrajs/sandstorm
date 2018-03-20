@@ -25,6 +25,15 @@ orm.Schema.register("Base", {
 		}
 	]
 });
+orm.Schema.register("Collated", {
+	name: "String",
+	array: [
+		{
+			type: "Sub",
+			embed: ["name"]
+		}
+	]
+});
 let _db = null;
 describe("cursor", () => {
 	before((done) => {
@@ -47,6 +56,24 @@ describe("cursor", () => {
 						{
 							name: "Two" + a,
 							value: "" + a
+						}
+					]
+				});
+				wait.push(model.save());
+			}
+			const colNames = "abc,żółw,Blah,Ćma,ćpa,coś,Alfabet,alfabet,123,lepa".split(",");
+			for (let a = 0; a < num; a++) {
+				const model = orm.create("Collated");
+				model.set({
+					name: colNames[a],
+					array: [
+						{
+							name: colNames[a] + "One" + a,
+							value: "" + a
+						},
+						{
+							name: "Two" + a,
+							value: colNames[a]
 						}
 					]
 				});
@@ -96,6 +123,16 @@ describe("cursor", () => {
 				const dry = results.map(_ => _.get());
 				assert(dry.shift().array[0].get().name === "One9");
 				assert(dry.shift().array[0].get().name === "One8");
+				done();
+			}).catch(done);
+	});
+	it("sort desc + collation", (done) => {
+		orm.find("Collated", {}).sort({"name": -1}).collation({
+			locale: "pl",
+			strength: 2
+		}).toArray()
+			.then((results) => {
+				assert.equal(results.map(_ => _.get().name).join(","), "żółw,lepa,ćpa,Ćma,coś,Blah,Alfabet,alfabet,abc,123");
 				done();
 			}).catch(done);
 	});

@@ -411,7 +411,7 @@ function _dehydrate_model(embedded, key, target, embed) {
 function _extractProperties(object, properties) {
 	const result = {};
 	const length = properties.length;
-	for (let i = 0; i < length; i++) {
+	for (let i = 0; i < length; i += 1) {
 		result[properties[i]] = object[properties[i]];
 	}
 	return result;

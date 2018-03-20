@@ -37,9 +37,11 @@ describe("orm", () => {
 	});
 	describe("findOne", () => {
 		before(() => {
+			orm.register("Sub", {name: "String"});
 			orm.Schema.register("FindOne", {
 				key: "String",
-				value: "String"
+				value: "String",
+				sub: "Sub"
 			});
 		});
 		it("existing", (done) => {
@@ -65,7 +67,43 @@ describe("orm", () => {
 					delete result._id;
 					assert.deepStrictEqual(result, {
 						key: "key" + a,
-						value: "value" + a
+						value: "value" + a,
+						sub: null
+					});
+				});
+				done();
+			}).catch(done);
+		});
+		it("existing + hydrate", (done) => {
+			const num = 10;
+			const wait = [];
+			const sub = orm.create("Sub");
+			sub.set({name: "sub"});
+			for (let a = 0; a < num; a++) {
+				const model = orm.create("FindOne");
+				model.set({
+					key: "skey" + a,
+					value: "value" + a,
+					sub
+				});
+				wait.push(model.save());
+			}
+			Promise.all(wait).then(() => {
+				const wait = [];
+				for (let a = 0; a < num; a++) {
+					wait.push(orm.findOne("FindOne", {key: "skey" + a}, {hydrate: ["Sub"]}));
+				}
+				return Promise.all(wait);
+			}).then((results) => {
+				results.forEach((model, a) => {
+					const result = model.get();
+					result.sub = result.sub.get();
+					delete result._id;
+					delete result.sub._id;
+					assert.deepStrictEqual(result, {
+						key: "skey" + a,
+						value: "value" + a,
+						sub: {name: "sub"}
 					});
 				});
 				done();

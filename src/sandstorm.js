@@ -111,17 +111,18 @@ Sandstorm.prototype.find = function (name, query, options) {
  * Find one document
  * @param name
  * @param query
- * @param options
+ * @param [options]
  * @returns {Promise}
  */
 Sandstorm.prototype.findOne = function (name, query, options) {
+	options = options || {};
 	return this.db.collection(name).findOne(query, options).then((doc) => {
 		if (!doc) {
 			return doc;
 		}
 		const model = common.docToModel(this, name, doc);
-		if (this.schemas[name].options.hydrate && this.schemas[name].options.hydrate.length) {
-			return model.hydrate(this.schemas[name].options.hydrate);
+		if (options.hydrate && options.hydrate.length) {
+			return model.hydrate(options.hydrate);
 		}
 		return model;
 	});

@@ -565,17 +565,22 @@ describe("types", () => {
 					{
 						schema: {type: "Number"},
 						value: null,
-						name: "basic"
+						name: "null"
 					},
 					{
 						schema: {type: "Number"},
 						value: undefined,
-						name: "basic"
+						name: "undefined"
 					},
 					{
 						schema: {type: "Number"},
 						value: "",
-						name: "basic"
+						name: "empty string"
+					},
+					{
+						schema: {type: "Number"},
+						value: NaN,
+						name: "NaN"
 					},
 					{
 						schema: {

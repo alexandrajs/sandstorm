@@ -29,8 +29,7 @@ describe("$options", () => {
 			return db.collection("Sub");
 		}).then((collection) => {
 			return collection.listIndexes().toArray();
-		}).then((res) => {
-			console.log(res);
+		}).then(() => {
 			done();
 		}).catch(done);
 	});

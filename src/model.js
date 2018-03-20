@@ -197,14 +197,14 @@ function _delete(model) {
 /**
  *
  * @param {Model} model
- * @param {Object} options
+ * @param {Object} [options]
  * @returns {Object}
  * @private
  */
 function _get(model, options) {
 	const properties = {};
 	if (model.data._id) {
-		properties._id = model.data._id;
+		properties._id = new ObjectID(model.data._id);
 	}
 	fast.object.forEach(model.schema.properties, (property, propertyKey) => {
 		const type = model.schema.properties[propertyKey].type;
@@ -292,11 +292,11 @@ function _set(model, properties, merge) {
 function _save_embedded(model) {
 	const wait = [];
 	fast.object.forEach(model.orm.schemas[model.name].dependencies, (paths) => {
-		fast.object.forEach(paths, (search, path) => {
+		fast.object.forEach(paths, (embed, path) => {
 			common.pathMap(model.data, path, (embedded) => {
 				if (embedded instanceof Array) {
-					return fast.array.forEach(embedded, (embedded) => {
-						_save_embedded_model(model, embedded, wait);
+					return fast.array.forEach(embedded, (embed) => {
+						_save_embedded_model(model, embed, wait);
 					});
 				}
 				_save_embedded_model(model, embedded, wait);
@@ -333,7 +333,7 @@ function _hydrate(model, names) {
 	fast.array.forEach(names, (name) => {
 		const dependency = dependencies[name];
 		if (dependency) {
-			fast.object.forEach(dependency, (searches, path) => {
+			fast.object.forEach(dependency, (embedded, path) => {
 				common.pathMap(model.data, path, (embedded, key, target) => {
 					if (embedded instanceof Array) {
 						return fast.array.forEach(embedded, (embedded, key, target) => _hydrate_object(model, names, target, key, name, embedded, wait));
@@ -373,13 +373,13 @@ function _hydrate_object(model, names, target, key, name, embedded, wait) {
  * @private
  */
 function _dehydrate(model) {
-	fast.object.forEach(model.orm.schemas[model.name].dependencies, (paths) => {
-		fast.object.forEach(paths, (search, path) => {
+	fast.object.forEach(model.orm.schemas[model.name].dependencies, (dependencies) => {
+		fast.object.forEach(dependencies, (dependency, path) => {
 			common.pathMap(model.data, path, (embedded, key, target) => {
 				if (embedded instanceof Array) {
-					return fast.array.forEach(embedded, (embedded, key, target) => _dehydrate_model(embedded, key, target, search));
+					return fast.array.forEach(embedded, (embed, key, target) => _dehydrate_model(embed, key, target, dependency));
 				}
-				_dehydrate_model(embedded, key, target, search);
+				_dehydrate_model(embedded, key, target, dependency);
 			});
 		});
 	});
@@ -390,13 +390,13 @@ function _dehydrate(model) {
  * @param {Model} embedded
  * @param {string} key
  * @param {Object} target
- * @param {Array} search
+ * @param {Array} embed
  * @private
  */
-function _dehydrate_model(embedded, key, target, search) {
+function _dehydrate_model(embedded, key, target, embed) {
 	if (embedded instanceof Model) {
 		const data = embedded.get();
-		target[key] = _extractProperties(data, search);
+		target[key] = _extractProperties(data, embed);
 		target[key]._id = data._id;
 	}
 }
@@ -411,7 +411,7 @@ function _dehydrate_model(embedded, key, target, search) {
 function _extractProperties(object, properties) {
 	const result = {};
 	const length = properties.length;
-	for (let i = 0; i < length; i++) {
+	for (let i = 0; i < length; i += 1) {
 		result[properties[i]] = object[properties[i]];
 	}
 	return result;

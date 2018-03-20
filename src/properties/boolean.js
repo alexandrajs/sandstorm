@@ -11,6 +11,7 @@
 function BooleanProperty(options) {
 	this.type = "Boolean";
 	this.required = options.required || false;
+	this.unique = options.unique || false;
 	this.default = options.default;
 }
 

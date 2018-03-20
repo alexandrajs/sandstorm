@@ -42,7 +42,9 @@ describe("model", () => {
 				string: "String"
 			});
 			orm.connect("mongodb://localhost/sandstorm_test_model_base").then(() => {
-				_db = orm.use("sandstorm_test_model_base");
+				return orm.use("sandstorm_test_model_base");
+			}).then((db) => {
+				_db = db;
 				return _db.dropDatabase();
 			}).then(() => {
 				done();
@@ -169,7 +171,9 @@ describe("model", () => {
 		const orm = new Orm();
 		before((done) => {
 			orm.connect("mongodb://localhost/sandstorm_test_model_embed").then(() => {
-				_db = orm.use("sandstorm_test_model_embed");
+				return orm.use("sandstorm_test_model_embed");
+			}).then((db) => {
+				_db = db;
 				return _db.dropDatabase();
 			}).then(() => {
 				orm.register("Embed", {
@@ -181,23 +185,23 @@ describe("model", () => {
 						type: "Array",
 						item: {
 							type: "Embed",
-							search: ["name"]
+							embed: ["name"]
 						}
 					},
 					embed: {
 						type: "Embed",
-						search: ["name"]
+						embed: ["name"]
 					},
 					object: {
 						array: [
 							{
 								type: "Embed",
-								search: ["name"]
+								embed: ["name"]
 							}
 						],
 						embed: {
 							type: "Embed",
-							search: ["name"]
+							embed: ["name"]
 						}
 					}
 				});

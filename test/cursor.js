@@ -18,10 +18,20 @@ orm.register("Sub", {
 	value: "String"
 });
 orm.Schema.register("Base", {
+	id: "Number",
 	array: [
 		{
 			type: "Sub",
-			search: ["name"]
+			embed: ["name"]
+		}
+	]
+});
+orm.Schema.register("Collated", {
+	name: "String",
+	array: [
+		{
+			type: "Sub",
+			embed: ["name"]
 		}
 	]
 });
@@ -29,7 +39,9 @@ let _db = null;
 describe("cursor", () => {
 	before((done) => {
 		orm.connect("mongodb://localhost/sandstorm_test_cursor").then(() => {
-			_db = orm.use("sandstorm_test_cursor");
+			return orm.use("sandstorm_test_cursor");
+		}).then((db) => {
+			_db = db;
 			return _db.dropDatabase();
 		}).then(() => {
 			const num = 10;
@@ -37,6 +49,7 @@ describe("cursor", () => {
 			for (let a = 0; a < num; a++) {
 				const model = orm.create("Base");
 				model.set({
+					id: a,
 					array: [
 						{
 							name: "One" + a,
@@ -50,10 +63,37 @@ describe("cursor", () => {
 				});
 				wait.push(model.save());
 			}
+			const colNames = "abc,żółw,Blah,Ćma,ćpa,coś,Alfabet,alfabet,123,lepa".split(",");
+			for (let a = 0; a < num; a++) {
+				const model = orm.create("Collated");
+				model.set({
+					name: colNames[a],
+					array: [
+						{
+							name: colNames[a] + "One" + a,
+							value: "" + a
+						},
+						{
+							name: "Two" + a,
+							value: colNames[a]
+						}
+					]
+				});
+				wait.push(model.save());
+			}
 			return Promise.all(wait);
 		}).then(() => {
 			done();
 		}).catch(done);
+	});
+	it("project", (done) => {
+		orm.find("Base", {"array.name": "One5"}).project({array: 0}).toArray()
+			.then((results) => {
+				const doc = results.pop().get();
+				assert.equal(doc.id, 5);
+				assert.equal(typeof doc.array, "undefined");
+				done();
+			}).catch(done);
 	});
 	it("hydrate", (done) => {
 		orm.find("Base", {"array.name": "One5"}).hydrate(["Sub"]).toArray()
@@ -94,6 +134,16 @@ describe("cursor", () => {
 				const dry = results.map(_ => _.get());
 				assert(dry.shift().array[0].get().name === "One9");
 				assert(dry.shift().array[0].get().name === "One8");
+				done();
+			}).catch(done);
+	});
+	it("sort desc + collation", (done) => {
+		orm.find("Collated", {}).sort({"name": -1}).collation({
+			locale: "pl",
+			strength: 3
+		}).toArray()
+			.then((results) => {
+				assert.equal(results.map(_ => _.get().name).join(","), "żółw,lepa,ćpa,Ćma,coś,Blah,Alfabet,alfabet,abc,123");
 				done();
 			}).catch(done);
 	});

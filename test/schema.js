@@ -5,6 +5,35 @@
 const assert = require("assert");
 const {StringProperty} = require("../src/properties");
 const Orm = require("../");
+describe("$options", () => {
+	it("", (done) => {
+		const orm = new Orm();
+		orm.register("Sub", {
+			name: "String",
+			$options: {
+				indexes: [
+					{
+						fieldOrSpec: {name: 1},
+						options: {unique: true}
+					}
+				],
+				collation: {
+					locale: "pl",
+					strength: 2
+				}
+			}
+		});
+		orm.connect("mongodb://localhost/sandstorm_test_schema_options").then(() => {
+			return orm.use("sandstorm_test_schema_options");
+		}).then((db) => {
+			return db.collection("Sub");
+		}).then((collection) => {
+			return collection.listIndexes().toArray();
+		}).then(() => {
+			done();
+		}).catch(done);
+	});
+});
 describe("embedded schemas dependencies", () => {
 	describe("in array", () => {
 		const orm = new Orm();
@@ -21,7 +50,7 @@ describe("embedded schemas dependencies", () => {
 					type: "Array",
 					item: {
 						type: "Sub",
-						search: ["name"]
+						embed: ["name"]
 					}
 				}
 			});
@@ -41,7 +70,7 @@ describe("embedded schemas dependencies", () => {
 			orm.register("FromObject", {
 				sub: {
 					type: "Sub",
-					search: ["name"]
+					embed: ["name"]
 				}
 			});
 			assert.deepStrictEqual(orm.schemas.FromObject.dependencies, {Sub: {sub: ["name"]}});
@@ -73,10 +102,12 @@ describe("basic types", () => {
 				out: {
 					type: "Array",
 					required: false,
+					unique: false,
 					default: undefined,
 					item: {
 						type: "Mixed",
 						required: false,
+						unique: false,
 						default: undefined
 					},
 					min: undefined,
@@ -88,10 +119,12 @@ describe("basic types", () => {
 				out: {
 					type: "Array",
 					required: false,
+					unique: false,
 					default: undefined,
 					item: {
 						type: "Boolean",
 						required: false,
+						unique: false,
 						default: undefined
 					},
 					min: undefined,
@@ -103,6 +136,7 @@ describe("basic types", () => {
 				out: {
 					type: "Boolean",
 					required: false,
+					unique: false,
 					default: undefined
 				}
 			},
@@ -111,6 +145,7 @@ describe("basic types", () => {
 				out: {
 					type: "Date",
 					required: false,
+					unique: false,
 					default: undefined,
 					min: undefined,
 					max: undefined
@@ -121,6 +156,7 @@ describe("basic types", () => {
 				out: {
 					type: "Mixed",
 					required: false,
+					unique: false,
 					default: undefined
 				}
 			},
@@ -129,6 +165,7 @@ describe("basic types", () => {
 				out: {
 					type: "Number",
 					required: false,
+					unique: false,
 					default: undefined,
 					min: undefined,
 					max: undefined,
@@ -141,6 +178,7 @@ describe("basic types", () => {
 				out: {
 					type: "Object",
 					required: false,
+					unique: false,
 					default: undefined,
 					properties: undefined
 				}
@@ -150,6 +188,7 @@ describe("basic types", () => {
 				out: {
 					type: "Object",
 					required: false,
+					unique: false,
 					default: undefined,
 					properties: undefined
 				}
@@ -159,6 +198,7 @@ describe("basic types", () => {
 				out: {
 					type: "ObjectID",
 					required: false,
+					unique: false,
 					default: undefined
 				}
 			},
@@ -167,6 +207,7 @@ describe("basic types", () => {
 				out: {
 					type: "String",
 					required: false,
+					unique: false,
 					default: undefined,
 					min: undefined,
 					max: undefined,
@@ -223,7 +264,8 @@ describe("basic types", () => {
 					value: new StringProperty({})
 				},
 				dependencies: {},
-				dependents: {}
+				dependents: {},
+				options: {}
 			}
 		});
 	});
@@ -257,6 +299,7 @@ describe("basic types", () => {
 					"key": {
 						type: "Array",
 						required: true,
+						unique: false,
 						default: [],
 						item: {
 							type: "Mixed"
@@ -268,11 +311,13 @@ describe("basic types", () => {
 				out: {
 					type: "Array",
 					required: true,
+					unique: false,
 					default: [],
 					item: {
 						type: "Mixed",
 						default: undefined,
-						required: false
+						required: false,
+						unique: false
 					},
 					min: 1,
 					max: 2
@@ -283,19 +328,25 @@ describe("basic types", () => {
 					"key": {
 						type: "Array",
 						required: true,
+						unique: false,
 						default: [],
-						item: {type: "Mixed"},
+						item: {
+							type: "Mixed",
+							unique: false
+						},
 						length: 5
 					}
 				},
 				out: {
 					type: "Array",
 					required: true,
+					unique: false,
 					default: [],
 					item: {
 						type: "Mixed",
 						default: undefined,
-						required: false
+						required: false,
+						unique: false
 					},
 					min: 5,
 					max: 5
@@ -308,11 +359,13 @@ describe("basic types", () => {
 				out: {
 					type: "Array",
 					required: false,
+					unique: false,
 					default: undefined,
 					item: {
 						type: "Mixed",
 						default: undefined,
-						required: false
+						required: false,
+						unique: false
 					},
 					min: undefined,
 					max: undefined
@@ -325,11 +378,13 @@ describe("basic types", () => {
 				out: {
 					type: "Array",
 					required: false,
+					unique: false,
 					default: undefined,
 					item: {
 						type: "Mixed",
 						default: undefined,
-						required: false
+						required: false,
+						unique: false
 					},
 					min: undefined,
 					max: undefined
@@ -340,12 +395,14 @@ describe("basic types", () => {
 					"key": {
 						type: "Boolean",
 						required: true,
+						unique: false,
 						default: true
 					}
 				},
 				out: {
 					type: "Boolean",
 					required: true,
+					unique: false,
 					default: true
 				}
 			},
@@ -354,6 +411,7 @@ describe("basic types", () => {
 					"key": {
 						type: "Date",
 						required: true,
+						unique: false,
 						default: date_default,
 						min: date_min,
 						max: date_max
@@ -362,6 +420,7 @@ describe("basic types", () => {
 				out: {
 					type: "Date",
 					required: true,
+					unique: false,
 					default: date_default,
 					min: date_min,
 					max: date_max
@@ -378,6 +437,7 @@ describe("basic types", () => {
 				out: {
 					type: "Mixed",
 					required: true,
+					unique: false,
 					default: {}
 				}
 			},
@@ -386,6 +446,7 @@ describe("basic types", () => {
 					"key": {
 						type: "Number",
 						required: true,
+						unique: false,
 						default: 5.5,
 						min: 1,
 						max: 10,
@@ -396,6 +457,7 @@ describe("basic types", () => {
 				out: {
 					type: "Number",
 					required: true,
+					unique: false,
 					default: 5.5,
 					min: 1,
 					max: 10,
@@ -408,6 +470,7 @@ describe("basic types", () => {
 					"key": {
 						type: "Object",
 						required: true,
+						unique: false,
 						default: {},
 						properties: {}
 					}
@@ -415,6 +478,7 @@ describe("basic types", () => {
 				out: {
 					type: "Object",
 					required: true,
+					unique: false,
 					default: {},
 					properties: null
 				}
@@ -428,11 +492,13 @@ describe("basic types", () => {
 				out: {
 					type: "Object",
 					required: false,
+					unique: false,
 					default: undefined,
 					properties: {
 						key: {
 							type: "String",
 							required: false,
+							unique: false,
 							default: undefined,
 							min: undefined,
 							max: undefined,
@@ -450,16 +516,19 @@ describe("basic types", () => {
 				out: {
 					type: "Object",
 					required: false,
+					unique: false,
 					default: undefined,
 					properties: {
 						key: {
 							type: "Object",
 							required: false,
+							unique: false,
 							default: undefined,
 							properties: {
 								key: {
 									type: "String",
 									required: false,
+									unique: false,
 									default: undefined,
 									min: undefined,
 									max: undefined,
@@ -475,12 +544,14 @@ describe("basic types", () => {
 					"key": {
 						type: "ObjectID",
 						required: true,
+						unique: false,
 						default: null
 					}
 				},
 				out: {
 					type: "ObjectID",
 					required: true,
+					unique: false,
 					default: null
 				}
 			},
@@ -489,6 +560,7 @@ describe("basic types", () => {
 					"key": {
 						type: "String",
 						required: true,
+						unique: false,
 						default: "string",
 						min: 1,
 						max: 10,
@@ -498,6 +570,7 @@ describe("basic types", () => {
 				out: {
 					type: "String",
 					required: true,
+					unique: false,
 					default: "string",
 					min: 1,
 					max: 10,
@@ -509,6 +582,7 @@ describe("basic types", () => {
 					"key": {
 						type: "String",
 						required: true,
+						unique: false,
 						default: "string",
 						length: 5,
 						pattern: /^[a-z]*$/
@@ -517,6 +591,7 @@ describe("basic types", () => {
 				out: {
 					type: "String",
 					required: true,
+					unique: false,
 					default: "string",
 					min: 5,
 					max: 5,

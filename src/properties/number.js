@@ -11,6 +11,7 @@
 function NumberProperty(options) {
 	this.type = "Number";
 	this.required = options.required || false;
+	this.unique = options.unique || false;
 	this.default = options.default;
 	this.integer = options.integer || false;
 	this.autoincrement = options.autoincrement || false;

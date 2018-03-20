@@ -9,7 +9,7 @@ const ExtError = require("exterror");
 
 /**
  *
- * @param {MongoDB.Cursor} cursor
+ * @param {Cursor} cursor
  * @param {Sandstorm} orm
  * @param {string} name
  * @param {Object} [options]
@@ -24,6 +24,9 @@ function Cursor(cursor, orm, name, options) {
 		raw: false
 	};
 	this.setOptions(options);
+	if (this.options.collation) {
+		this.collation(this.options.collation);
+	}
 }
 
 /**
@@ -74,6 +77,15 @@ Cursor.prototype.filter = function () {
 /* istanbul ignore next */
 Cursor.prototype.forEach = function () {
 	// TODO: implement
+};
+/**
+ *
+ * @param {Object} value
+ * @returns {Cursor}
+ */
+Cursor.prototype.project = function (value) {
+	this.cursor.project(value);
+	return this;
 };
 /**
  *

@@ -14,7 +14,7 @@ const ExtError = require("exterror");
 /**
  *
  * @param {Sandstorm} orm
- * @param {Object} options
+ * @param {Object} [options]
  * @constructor
  */
 function Schema(orm, options) {
@@ -40,6 +40,9 @@ Schema.prototype.export = function () {
  * Register blueprint with given name
  * @param {string} name
  * @param {Object} blueprint
+ * @param {Object} blueprint.$options
+ * @param {Array<{fieldOrSpec: String|Object, [collation]:Object}>} blueprint.$options.indexes
+ * @param {Object} blueprint.$options.collation
  */
 Schema.prototype.register = function register(name, blueprint) {
 	if (typeof name !== "string") {
@@ -49,19 +52,28 @@ Schema.prototype.register = function register(name, blueprint) {
 		throw new ExtError("ERR_SCHEMA_ALREADY_EXISTS", "Schema '" + name + "' already exists");
 	}
 	if (!common.isPlainObject(blueprint)) {
-		throw new ExtError("ERR_BLUEPRINT_MUST_BE_PLAIN_OBJECT", "Expected parameter 'blueprint' to be plain object, got " + typeof name);
+		throw new ExtError("ERR_BLUEPRINT_MUST_BE_PLAIN_OBJECT", "Expected parameter 'blueprint' to be plain object, got " + typeof blueprint);
+	}
+	if (blueprint.$options && !common.isPlainObject(blueprint.$options)) {
+		throw new ExtError("ERR_OPTIONS_MUST_BE_PLAIN_OBJECT", "Expected parameter 'options' to be plain object, got " + typeof blueprint.$options);
 	}
 	if (name in types) {
 		throw new ExtError("ERR_CANT_OVERWRITE_BASE_TYPE", "Can not overwrite base type '" + name + "'");
 	}
 	const dependencies = {};
 	const dependents = {};
+	/**
+	 *
+	 * @type {{type: string, properties: {}, dependencies: {}, dependents: {}, options: {indexes: Array<{fieldOrSpec: String|Object, collation?: Object}>, collation: Object}|{}}}
+	 */
 	const schema = {
 		type: name,
 		properties: {},
 		dependencies: dependencies,
-		dependents: dependents
+		dependents: dependents,
+		options: blueprint.$options || {}
 	};
+	delete blueprint.$options;
 	this.orm.schemas[name] = schema;
 	schema.properties = _parse(blueprint, [], schema, this.orm);
 	return this.orm.schemas[name];
@@ -77,7 +89,10 @@ Schema.sort = function (blueprints) {
 
 	function parse_obj(object) {
 		const dependencies = [];
-		fast.forEach(object, (property) => {
+		fast.forEach(object, (property, key) => {
+			if (key[0] === "$") {
+				return;
+			}
 			if (typeof property === "string" && names.includes(property)) {
 				if (!(property in types)) {
 					common.pushUnique(dependencies, property);
@@ -174,8 +189,8 @@ function _expandProperty(property, path, schema, orm) {
 			return new MixedProperty(property.options);
 		default:
 			if (property.type in orm.schemas) {
-				_addSchemaDependency(schema, path, property.type, orm, property.options.search);
-				_addSchemaDependent(schema, path, property.type, orm, property.options.search);
+				_addSchemaDependency(schema, path, property.type, orm, property.options.embed);
+				_addSchemaDependent(schema, path, property.type, orm, property.options.embed);
 				return new ModelProperty(fast.object.assign({}, property.options, {type: property.type}), path, schema);
 			}
 	}
@@ -272,14 +287,14 @@ function _parseProperty(property, path, schema, orm) {
  * @param {Array} path
  * @param {String} name
  * @param {Sandstorm} orm
- * @param {Array} search
+ * @param {Array} embed
  */
-function _addSchemaDependency(schema, path, name, orm, search) {
+function _addSchemaDependency(schema, path, name, orm, embed) {
 	const path_str = path.join(".");
 	if (!(name in schema.dependencies)) {
 		schema.dependencies[name] = {};
 	}
-	fast.object.assign(schema.dependencies[name], {[path_str]: search || []});
+	fast.object.assign(schema.dependencies[name], {[path_str]: embed || []});
 }
 
 /**
@@ -288,15 +303,18 @@ function _addSchemaDependency(schema, path, name, orm, search) {
  * @param {Array} path
  * @param {String} name
  * @param {Sandstorm} orm
- * @param {Array} search
+ * @param {Array} embed
  */
-function _addSchemaDependent(schema, path, name, orm, search) {
+function _addSchemaDependent(schema, path, name, orm, embed) {
 	const path_str = path.join(".");
 	const target = orm.schemas[name];
 	if (!(schema.type in target.dependents)) {
 		target.dependents[schema.type] = {};
 	}
-	fast.object.assign(target.dependents[schema.type], {[path_str]: search || []});
+	fast.object.assign(target.dependents[schema.type], {[path_str]: embed || []});
+}
+
+function _setUniqueIndexOption(schema, property, path) {
 }
 
 // noinspection JSUnusedGlobalSymbols
@@ -307,5 +325,6 @@ Schema[Symbol.for("private")] = {
 	_parse,
 	_parseArrayProperty,
 	_parseObjectProperty,
-	_parseProperty
+	_parseProperty,
+	_setUniqueIndexOption
 };

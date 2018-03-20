@@ -11,6 +11,7 @@
 function MixedProperty(options) {
 	this.type = "Mixed";
 	this.required = options.required || false;
+	this.unique = options.unique || false;
 	this.default = options.default;
 }
 

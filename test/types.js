@@ -13,7 +13,9 @@ describe("types", () => {
 			let _db;
 			before((done) => {
 				orm.connect("mongodb://localhost/sandstorm_test_types").then(() => {
-					_db = orm.use("sandstorm_test_types");
+					return orm.use("sandstorm_test_types");
+				}).then((db) => {
+					_db = db;
 					return _db.dropDatabase();
 				}).then(() => {
 					done();
@@ -563,17 +565,22 @@ describe("types", () => {
 					{
 						schema: {type: "Number"},
 						value: null,
-						name: "basic"
+						name: "null"
 					},
 					{
 						schema: {type: "Number"},
 						value: undefined,
-						name: "basic"
+						name: "undefined"
 					},
 					{
 						schema: {type: "Number"},
 						value: "",
-						name: "basic"
+						name: "empty string"
+					},
+					{
+						schema: {type: "Number"},
+						value: NaN,
+						name: "NaN"
 					},
 					{
 						schema: {

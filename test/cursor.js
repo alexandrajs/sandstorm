@@ -129,7 +129,7 @@ describe("cursor", () => {
 	it("sort desc + collation", (done) => {
 		orm.find("Collated", {}).sort({"name": -1}).collation({
 			locale: "pl",
-			strength: 2
+			strength: 3
 		}).toArray()
 			.then((results) => {
 				assert.equal(results.map(_ => _.get().name).join(","), "żółw,lepa,ćpa,Ćma,coś,Blah,Alfabet,alfabet,abc,123");

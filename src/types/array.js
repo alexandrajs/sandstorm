@@ -32,9 +32,20 @@ function _set(model, target, set, schema, key, value) {
 	}
 	set[key] = [];
 	target[key] = [];
-	fast.forEach(value, (item, targetKey) => {
+	fast.forEach(value, (item, target_key) => {
 		const item_schema = schema.item;
-		common.setTargetItem(types, model, set, target, targetKey, schema, item, item_schema, type, key, value);
+		common.setTargetItem({
+			types,
+			model,
+			set,
+			target,
+			target_key,
+			item,
+			item_schema,
+			type,
+			key,
+			value
+		});
 	});
 }
 

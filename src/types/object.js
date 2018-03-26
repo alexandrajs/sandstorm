@@ -24,13 +24,24 @@ function _set(model, target, set, schema, key, value) {
 	}
 	set[key] = {};
 	target[key] = {};
-	fast.object.forEach(value, (item, targetKey) => {
-		if (!schema.properties.hasOwnProperty(targetKey)) {
-			throw new ExtError("ERR_KEY_NOT_ALLOWED", "Key '" + targetKey + "' in '" + key + "' in not allowed ");
+	fast.object.forEach(value, (item, target_key) => {
+		if (!schema.properties.hasOwnProperty(target_key)) {
+			throw new ExtError("ERR_KEY_NOT_ALLOWED", "Key '" + target_key + "' in '" + key + "' in not allowed ");
 		}
-		const type = schema.properties[targetKey].type;
-		const item_schema = schema.properties[targetKey];
-		common.setTargetItem(types, model, set, target, targetKey, schema, item, item_schema, type, key, value);
+		const type = schema.properties[target_key].type;
+		const item_schema = schema.properties[target_key];
+		common.setTargetItem({
+			types,
+			model,
+			set,
+			target,
+			target_key,
+			item,
+			item_schema,
+			type,
+			key,
+			value
+		});
 	});
 }
 

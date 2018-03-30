@@ -5,7 +5,6 @@
 const types = require("./index");
 const fast = require("fast.js");
 const common = require("../common");
-const Model = require("../model");
 const ExtError = require("exterror");
 
 /**
@@ -33,25 +32,20 @@ function _set(model, target, set, schema, key, value) {
 	}
 	set[key] = [];
 	target[key] = [];
-	fast.forEach(value, (item, targetKey) => {
-		if (type in types) {
-			return types[type].set(model, target[key], set[key], schema.item, targetKey, item);
-		}
-		if (type in model.orm.schemas) {
-			if (common.isPlainObject(item)) {
-				const data = item;
-				item = new Model(model.orm, type);
-				item.set(data);
-			}
-			if (item instanceof Model) {
-				if (item.name === type) {
-					target[key][targetKey] = item;
-					set[key][targetKey] = item;
-					return;
-				}
-			}
-		}
-		throw new ExtError("ERR_WRONG_PROPERTY_TYPE");
+	fast.array.forEach(value, (item, target_key) => {
+		const item_schema = schema.item;
+		common.setTargetItem({
+			types,
+			model,
+			set,
+			target,
+			target_key,
+			item,
+			item_schema,
+			type,
+			key,
+			value
+		});
 	});
 }
 

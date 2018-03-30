@@ -169,6 +169,47 @@ function modelGet(target, schema, key) {
 	return target[key];
 }
 
+/**
+ * @param {Object} parameters
+ * @param {Object} parameters.types
+ * @param {Model} parameters.model
+ * @param {Object} parameters.set
+ * @param {Object|Array} parameters.target
+ * @param {string} parameters.target_key
+ * @param {*} parameters.item
+ * @param {Object} parameters.item_schema
+ * @param {string} parameters.type
+ * @param {string} parameters.key
+ * @param {*} parameters.value
+ */
+function setTargetItem(parameters) {
+	let {types, model, set, target, target_key, item, item_schema, type, key, value} = parameters;
+	if (type in types) {
+		return types[type].set(model, target[key], set[key], item_schema, target_key, item);
+	}
+	if (type in model.orm.schemas) {
+		if (isPlainObject(item)) {
+			const data = item;
+			if (data._id) {
+				item = new Model(model.orm, type, {_id: data._id});
+				delete data._id;
+				item.merge(data);
+			} else {
+				item = new Model(model.orm, type);
+				item.set(data);
+			}
+		}
+		if (item instanceof Model) {
+			if (item.name === type) {
+				target[key][target_key] = item;
+				set[key][target_key] = item;
+				return;
+			}
+		}
+	}
+	throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + target_key + "' in '" + key + "' to be " + item_schema.type + ", got " + typeof value);
+}
+
 module.exports = {
 	isEmpty,
 	isPlainObject,
@@ -179,6 +220,7 @@ module.exports = {
 	pushUnique,
 	objectToDotNotation,
 	_objectToDotNotation,
-	modelGet
+	modelGet,
+	setTargetItem
 };
 const Model = require("./model");

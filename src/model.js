@@ -122,7 +122,7 @@ function _save_set(model, resolve, reject) {
 			if (typeof model.data._id === "string") {
 				model.data._id = new ObjectID(model.data._id);
 			}
-			return collection.replaceOne({_id: model.data._id}, doc, _save_set_cb);
+			return collection.replaceOne({_id: model.data._id}, doc, {upsert: true}, _save_set_cb);
 		}
 		collection.insertOne(doc, _save_set_cb);
 	});
@@ -149,7 +149,7 @@ function _save_merge(model, resolve, reject) {
 			return reject(err);
 		}
 		model._set = {};
-		collection.updateOne({_id: _id}, update, (err) => {
+		collection.updateOne({_id: _id}, update, {upsert: true}, (err) => {
 			if (err) {
 				return reject(err);
 			}

@@ -1,6 +1,6 @@
 {
   "name": "sandstorm",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "description": "Not a MongoDB ORM",
   "main": "./index.js",
   "scripts": {
@@ -35,7 +35,7 @@
     "bluebird": "^3.5.1",
     "exterror": "^1.1.0",
     "fast.js": "^0.1.1",
-    "mongodb": "^3.0.4",
+    "mongodb": "^3.0.5",
     "run-parallel": "^1.1.8",
     "utls": "^0.2.22"
   },

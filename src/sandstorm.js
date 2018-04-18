@@ -17,7 +17,7 @@ const ExtError = require("exterror");
 
 /**
  *
- * @param {Object} options
+ * @param {Object} [options]
  * @param {Object|Redis} options.redisClient
  * @constructor
  */
@@ -79,6 +79,8 @@ Sandstorm.prototype.use = function (dbName) {
  * Disconnects from server
  */
 Sandstorm.prototype.disconnect = function () {
+	this.cache.pop();
+	this.cache.pop().client.disconnect(); // Redis disconnect
 	this.cache = null;
 	return this.client && this.client.close(true);
 };
@@ -240,7 +242,12 @@ function _ensure_indexes(db, schemas) {
 					if (typeof index.fieldOrSpec !== "string" && !common.isPlainObject(index.fieldOrSpec)) {
 						return Promise.reject(new ExtError("ERR_COLLECTION_INDEX_FIELDORSPEC_MUST_BE_OBJECTOR_STRING", "Collection index.fieldOrSpec must be plain object or string"));
 					}
-					return collection.createIndex(index.fieldOrSpec, fast.assign({collation: fast.object.clone(schema.options.collation || {})}, index.options || {}));
+					const options = fast.assign({}, index.options || {});
+					const collation = fast.object.clone(schema.options.collation || {});
+					if (!common.isEmpty(collation) && !options.collation) {
+						options.collation = collation;
+					}
+					return collection.createIndex(index.fieldOrSpec, common.isEmpty(options) ? undefined : options);
 				})));
 			});
 		}));

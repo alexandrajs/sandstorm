@@ -5,7 +5,7 @@
 const common = require("../common");
 const ObjectID = require("mongodb").ObjectID;
 const ExtError = require("exterror");
-
+const Promise = require("bluebird");
 /**
  *
  * @param model
@@ -18,6 +18,7 @@ const ExtError = require("exterror");
  */
 function _set(model, target, set, schema, key, value) {
 	set[key] = target[key] = value;
+	return Promise.resolve();
 }
 
 /**
@@ -32,12 +33,16 @@ function _set(model, target, set, schema, key, value) {
  */
 function set(model, target, set, schema, key, value) {
 	if (typeof value === "string") {
-		value = new ObjectID(value);
+		try {
+			value = new ObjectID(value);
+		} catch (e) {
+			return Promise.reject(e);
+		}
 	}
 	if (!(value instanceof ObjectID)) {
-		throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be instance of ObjectID or string, got " + typeof value);
+		return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be instance of ObjectID or string, got " + typeof value));
 	}
-	_set(model, target, set, schema, key, value);
+	return _set(model, target, set, schema, key, value);
 }
 
 module.exports = {

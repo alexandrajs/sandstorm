@@ -6,6 +6,7 @@ const types = require("./index");
 const fast = require("fast.js");
 const common = require("../common");
 const ExtError = require("exterror");
+const Promise = require("bluebird");
 
 /**
  *
@@ -20,21 +21,22 @@ const ExtError = require("exterror");
 function _set(model, target, set, schema, key, value) {
 	const length = value.length;
 	if (schema.min && length < schema.min) {
-		throw new ExtError("ERR_ARRAY_TOO_SHORT");
+		return Promise.reject(new ExtError("ERR_ARRAY_TOO_SHORT"));
 	}
 	if (schema.max && length > schema.max) {
-		throw new ExtError("ERR_ARRAY_TOO_LONG");
+		return Promise.reject(new ExtError("ERR_ARRAY_TOO_LONG"));
 	}
 	const type = schema.item.type;
 	if (type === "Mixed") {
 		set[key] = target[key] = fast.cloneArray(value);
-		return;
+		return Promise.resolve();
 	}
 	set[key] = [];
 	target[key] = [];
+	const await = [];
 	fast.array.forEach(value, (item, target_key) => {
 		const item_schema = schema.item;
-		common.setTargetItem({
+		await.push(common.setTargetItem({
 			types,
 			model,
 			set,
@@ -45,8 +47,9 @@ function _set(model, target, set, schema, key, value) {
 			type,
 			key,
 			value
-		});
+		}));
 	});
+	return Promise.all(await);
 }
 
 /**
@@ -61,9 +64,9 @@ function _set(model, target, set, schema, key, value) {
  */
 function set(model, target, set, schema, key, value) {
 	if (!(value instanceof Array)) {
-		throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be instance of Array, got " + typeof value);
+		return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be instance of Array, got " + typeof value));
 	}
-	_set(model, target, set, schema, key, value);
+	return _set(model, target, set, schema, key, value);
 }
 
 module.exports = {

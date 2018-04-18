@@ -51,8 +51,7 @@ book.set({title: "The Art of Deception",
 		last_name: "Mitnick",
 		name: "Kevin"
 	}
-});
-book.save().then((_id) => {
+}).then(() => book.save()).then((_id) => {
 	console.log("ObjectID of saved book", _id);
 }).catch((err) => {
 	console.error("Ups", err);
@@ -69,8 +68,8 @@ sandstorm.find("Book", {"author.name": "Kevin"}).toArray().then((docs) => {
 ### Updating
 Use `merge` to update only chosen fields or `set` to overwrite whole document
 ```js
-book.merge({title: "The Art of Deception: Controling the Human Element of Security"});
-book.save().then((_id) => {
+book.merge({title: "The Art of Deception: Controling the Human Element of Security"})
+	.then(() => book.save()).then((_id) => {
 	console.log("ObjectID of saved book", _id);
 }).catch((err) => {
 	console.error("Ups", err);
@@ -79,13 +78,10 @@ book.save().then((_id) => {
 ```
 ### Deleting
 ```js
-sandstorm.find("Book", {"author.name": "Kevin"}).toArray().then((docs) => {
-	Promise.all(docs.map(book => book.delete())).then(() => {
+sandstorm.find("Book", {"author.name": "Kevin"}).toArray()
+	.then((docs) => Promise.all(docs.map(book => book.delete())).then(() => {
 		console.log("All documents deleted");
-	}).catch((err) => {
-		console.error("Ups", err);
-	});
-}).catch((err) => {
+	})).catch((err) => {
 	console.error("Ups", err);
 });
 ```

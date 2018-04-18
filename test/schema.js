@@ -30,6 +30,7 @@ describe("$options", () => {
 		}).then((collection) => {
 			return collection.listIndexes().toArray();
 		}).then(() => {
+			orm.disconnect();
 			done();
 		}).catch(done);
 	});

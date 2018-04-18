@@ -37,6 +37,9 @@ orm.Schema.register("Collated", {
 });
 let _db = null;
 describe("cursor", () => {
+	after(async () => {
+		await orm.disconnect();
+	});
 	before((done) => {
 		orm.connect("mongodb://localhost/sandstorm_test_cursor").then(() => {
 			return orm.use("sandstorm_test_cursor");
@@ -48,7 +51,7 @@ describe("cursor", () => {
 			const wait = [];
 			for (let a = 0; a < num; a++) {
 				const model = orm.create("Base");
-				model.set({
+				wait.push(model.set({
 					id: a,
 					array: [
 						{
@@ -60,13 +63,12 @@ describe("cursor", () => {
 							value: "" + a
 						}
 					]
-				});
-				wait.push(model.save());
+				}).then(model => model.save()));
 			}
 			const colNames = "abc,żółw,Blah,Ćma,ćpa,coś,Alfabet,alfabet,123,lepa".split(",");
 			for (let a = 0; a < num; a++) {
 				const model = orm.create("Collated");
-				model.set({
+				wait.push(model.set({
 					name: colNames[a],
 					array: [
 						{
@@ -78,8 +80,7 @@ describe("cursor", () => {
 							value: colNames[a]
 						}
 					]
-				});
-				wait.push(model.save());
+				}).then(model => model.save()));
 			}
 			return Promise.all(wait);
 		}).then(() => {

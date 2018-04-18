@@ -4,7 +4,7 @@
 "use strict";
 const fast = require("fast.js");
 const ExtError = require("exterror");
-
+const Promise = require("bluebird");
 /**
  *
  * @param {Object} object
@@ -188,26 +188,27 @@ function setTargetItem(parameters) {
 		return types[type].set(model, target[key], set[key], item_schema, target_key, item);
 	}
 	if (type in model.orm.schemas) {
+		let await = Promise.resolve();
 		if (isPlainObject(item)) {
 			const data = item;
 			if (data._id) {
 				item = new Model(model.orm, type, {_id: data._id});
 				delete data._id;
-				item.merge(data);
+				await = item.merge(data);
 			} else {
 				item = new Model(model.orm, type);
-				item.set(data);
+				await = item.set(data);
 			}
 		}
 		if (item instanceof Model) {
 			if (item.name === type) {
 				target[key][target_key] = item;
 				set[key][target_key] = item;
-				return;
+				return await;
 			}
 		}
 	}
-	throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + target_key + "' in '" + key + "' to be " + item_schema.type + ", got " + typeof value);
+	return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + target_key + "' in '" + key + "' to be " + item_schema.type + ", got " + typeof value));
 }
 
 module.exports = {

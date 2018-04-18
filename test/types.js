@@ -9,8 +9,11 @@ describe("types", () => {
 	describe("save + merge", () => {
 		describe("ObjectID", () => {
 			const orm = new Orm();
-			orm.Schema.register("test", {key: "ObjectID"});
+			orm.register("test", {key: "ObjectID"});
 			let _db;
+			after(async () => {
+				await orm.disconnect();
+			});
 			before((done) => {
 				orm.connect("mongodb://localhost/sandstorm_test_types").then(() => {
 					return orm.use("sandstorm_test_types");
@@ -35,9 +38,10 @@ describe("types", () => {
 			].forEach((test) => {
 				it(test.name, (done) => {
 					const model = orm.create("test");
-					model.set({key: test.value});
-					model.save().then(_ => {
-						return model.merge({key: test.value}).save().then(_ => done());
+					model.set({key: test.value}).then(() => {
+						return model.save();
+					}).then(() => {
+						return model.merge({key: test.value}).then(model => model.save().then(() => done()));
 					}).catch(done);
 				});
 			});
@@ -151,18 +155,18 @@ describe("types", () => {
 						name: "default value"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, async () => {
 						const orm = new Orm();
-						orm.Schema.register("sub", {key: "String"});
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("sub", {key: "String"});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
 						if ("value" in test) {
 							if (test.from_model) {
 								const sub = orm.create("sub");
-								sub.set(test.value);
+								await sub.set(test.value);
 								test.value = [sub];
 							}
-							model.set({key: test.value});
+							await model.set({key: test.value});
 						}
 						if (test.is_model) {
 							assert.deepEqual(model.get().key[0].get(), test.expected || test.value);
@@ -195,18 +199,18 @@ describe("types", () => {
 						name: "default value"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, async () => {
 						const orm = new Orm();
-						orm.Schema.register("sub", {key: "String"});
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("sub", {key: "String"});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
 						if ("value" in test) {
 							if (test.from_model) {
 								const sub = orm.create("sub");
-								sub.set(test.value);
+								await sub.set(test.value);
 								test.value = [sub];
 							}
-							model.set({key: test.value});
+							await model.set({key: test.value});
 						}
 						if (test.is_model) {
 							assert.deepEqual(model.get().key[0].get(), test.expected || test.value);
@@ -234,18 +238,18 @@ describe("types", () => {
 						name: "default value"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, async () => {
 						const orm = new Orm();
-						orm.Schema.register("sub", {key: "String"});
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("sub", {key: "String"});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
 						if ("value" in test) {
 							if (test.from_model) {
 								const sub = orm.create("sub");
-								sub.set(test.value);
+								await sub.set(test.value);
 								test.value = [sub];
 							}
-							model.set({key: test.value});
+							await model.set({key: test.value});
 						}
 						if (test.is_model) {
 							assert.deepEqual(model.get().key[0].get(), test.expected || test.value);
@@ -278,18 +282,18 @@ describe("types", () => {
 						name: "default value"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, async () => {
 						const orm = new Orm();
-						orm.Schema.register("sub", {key: "String"});
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("sub", {key: "String"});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
 						if ("value" in test) {
 							if (test.from_model) {
 								const sub = orm.create("sub");
-								sub.set(test.value);
+								await sub.set(test.value);
 								test.value = [sub];
 							}
-							model.set({key: test.value});
+							await model.set({key: test.value});
 						}
 						if (test.is_model) {
 							assert.deepEqual(model.get().key[0].get(), test.expected || test.value);
@@ -354,12 +358,12 @@ describe("types", () => {
 						name: "default value"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, async () => {
 						const orm = new Orm();
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
 						if ("value" in test) {
-							model.set({key: test.value});
+							await model.set({key: test.value});
 						}
 						assert.strictEqual(model.get().key, test.expected || test.value);
 					});
@@ -437,17 +441,17 @@ describe("types", () => {
 						name: "missing required"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, (done) => {
 						const orm = new Orm();
-						orm.Schema.register("sub", {key: "String"});
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("sub", {key: "String"});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
-						assert.throws(() => {
-							if ("value" in test) {
-								model.set({key: test.value});
-							}
-							model.get();
-						});
+						if ("value" in test) {
+							model.set({key: test.value}).then(done).catch(() => done());
+						} else {
+							assert.throws(() => model.get());
+							done();
+						}
 					});
 				});
 			});
@@ -476,16 +480,16 @@ describe("types", () => {
 						name: "missing required"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, (done) => {
 						const orm = new Orm();
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
-						assert.throws(() => {
-							if ("value" in test) {
-								model.set({key: test.value});
-							}
-							model.get();
-						});
+						if ("value" in test) {
+							model.set({key: test.value}).then(done).catch(() => done());
+						} else {
+							assert.throws(() => model.get());
+							done();
+						}
 					});
 				});
 			});
@@ -514,16 +518,16 @@ describe("types", () => {
 						name: "missing required"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, (done) => {
 						const orm = new Orm();
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
-						assert.throws(() => {
-							if ("value" in test) {
-								model.set({key: test.value});
-							}
-							model.get();
-						});
+						if ("value" in test) {
+							model.set({key: test.value}).then(done).catch(() => done());
+						} else {
+							assert.throws(() => model.get());
+							done();
+						}
 					});
 				});
 			});
@@ -547,16 +551,16 @@ describe("types", () => {
 						name: "missing required"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, (done) => {
 						const orm = new Orm();
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
-						assert.throws(() => {
-							if ("value" in test) {
-								model.set({key: test.value});
-							}
-							model.get();
-						});
+						if ("value" in test) {
+							model.set({key: test.value}).then(done).catch(() => done());
+						} else {
+							assert.throws(() => model.get());
+							done();
+						}
 					});
 				});
 			});
@@ -606,16 +610,16 @@ describe("types", () => {
 						name: "missing required"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, (done) => {
 						const orm = new Orm();
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
-						assert.throws(() => {
-							if ("value" in test) {
-								model.set({key: test.value});
-							}
-							model.get();
-						});
+						if ("value" in test) {
+							model.set({key: test.value}).then(done).catch(() => done());
+						} else {
+							assert.throws(() => model.get());
+							done();
+						}
 					});
 				});
 			});
@@ -671,17 +675,17 @@ describe("types", () => {
 						name: "missing required"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, (done) => {
 						const orm = new Orm();
-						orm.Schema.register("sub", {key: test.schema});
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("sub", {key: test.schema});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
-						assert.throws(() => {
-							if ("value" in test) {
-								model.set({key: test.value});
-							}
-							model.get();
-						});
+						if ("value" in test) {
+							model.set({key: test.value}).then(done).catch(() => done());
+						} else {
+							assert.throws(() => model.get());
+							done();
+						}
 					});
 				});
 			});
@@ -710,17 +714,17 @@ describe("types", () => {
 						name: "missing required"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, (done) => {
 						const orm = new Orm();
-						orm.Schema.register("sub", {key: test.schema});
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("sub", {key: test.schema});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
-						assert.throws(() => {
-							if ("value" in test) {
-								model.set({key: test.value});
-							}
-							model.get();
-						});
+						if ("value" in test) {
+							model.set({key: test.value}).then(done).catch(() => done());
+						} else {
+							assert.throws(() => model.get());
+							done();
+						}
 					});
 				});
 			});
@@ -744,16 +748,16 @@ describe("types", () => {
 						name: "missing required"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, (done) => {
 						const orm = new Orm();
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
-						assert.throws(() => {
-							if ("value" in test) {
-								model.set({key: test.value});
-							}
-							model.get();
-						});
+						if ("value" in test) {
+							model.set({key: test.value}).then(done).catch(() => done());
+						} else {
+							assert.throws(() => model.get());
+							done();
+						}
 					});
 				});
 			});
@@ -814,16 +818,16 @@ describe("types", () => {
 						name: "missing required"
 					}
 				].forEach((test) => {
-					it(test.name, () => {
+					it(test.name, (done) => {
 						const orm = new Orm();
-						orm.Schema.register("test", {key: test.schema});
+						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
-						assert.throws(() => {
-							if ("value" in test) {
-								model.set({key: test.value});
-							}
-							model.get();
-						});
+						if ("value" in test) {
+							model.set({key: test.value}).then(done).catch(() => done());
+						} else {
+							assert.throws(() => model.get());
+							done();
+						}
 					});
 				});
 			});

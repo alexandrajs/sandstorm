@@ -13,11 +13,9 @@ describe("model", () => {
 	describe("set", () => {
 		const orm = new Orm();
 		orm.register("Set", {name: "String"});
-		it("not existing prop", () => {
+		it("not existing prop", (done) => {
 			const model = orm.create("Set");
-			assert.throws(() => {
-				model.set({notExisting: "key"});
-			});
+			model.set({notExisting: "key"}).then(() => done(new Error("Exception expected"))).catch(() => done());
 		});
 	});
 	it("toJSON", () => {
@@ -76,8 +74,9 @@ describe("model", () => {
 				},
 				objId: objId,
 				string: "String"
-			});
-			model.save().then(async () => {
+			}).then((model) => {
+				return model.save();
+			}).then(async () => {
 				const _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
 				assert.deepStrictEqual(_doc, {
 					_id: model.data._id,
@@ -98,15 +97,14 @@ describe("model", () => {
 					objId: objId,
 					string: "String"
 				});
-				model.set({
+				return model.set({
 					object: {b: false},
 					array: [
 						1,
 						"a",
 						true
 					]
-				});
-				return model.save();
+				}).then(model => model.save());
 			}).then(async () => {
 				const _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
 				delete _doc._id;
@@ -118,10 +116,9 @@ describe("model", () => {
 						true
 					]
 				});
-				model.merge({
+				return model.merge({
 					object: {c: 3}
-				});
-				return model.save();
+				}).then(model => model.save());
 			}).then(async () => {
 				let _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
 				delete _doc._id;

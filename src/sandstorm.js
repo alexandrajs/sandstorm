@@ -79,6 +79,8 @@ Sandstorm.prototype.use = function (dbName) {
  * Disconnects from server
  */
 Sandstorm.prototype.disconnect = function () {
+	this.cache.pop();
+	this.cache.pop().client.disconnect(); // Redis disconnect
 	this.cache = null;
 	return this.client && this.client.close(true);
 };

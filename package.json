@@ -1,6 +1,6 @@
 {
   "name": "sandstorm",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "description": "Not a MongoDB ORM",
   "main": "./index.js",
   "scripts": {
@@ -35,17 +35,17 @@
     "bluebird": "^3.5.1",
     "exterror": "^1.1.0",
     "fast.js": "^0.1.1",
-    "mongodb": "^3.0.5",
+    "mongodb": "^3.0.7",
     "run-parallel": "^1.1.8",
     "utls": "^0.2.22"
   },
   "devDependencies": {
     "benchmark": "^2.1.4",
-    "coveralls": "^2.11.15",
+    "coveralls": "^3.0.0",
     "ink-docstrap": "^1.3.2",
     "istanbul": "^0.4.5",
-    "jsdoc": "^3.4.3",
-    "mocha": "^2.5.3",
-    "mocha-lcov-reporter": "^1.2.0"
+    "jsdoc": "^3.5.5",
+    "mocha": "^5.1.0",
+    "mocha-lcov-reporter": "^1.3.0"
   }
 }

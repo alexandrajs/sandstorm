@@ -6,7 +6,6 @@
  * @ignore
  */
 const assert = require("assert");
-const {ObjectID, MongoClient} = require("mongodb");
 /**
  *
  * @type {Sandstorm}
@@ -25,6 +24,9 @@ orm.Schema.register("Base", {
 });
 let _db = null;
 describe("orm", () => {
+	after(async () => {
+		await orm.disconnect();
+	});
 	before((done) => {
 		orm.connect("mongodb://localhost/sandstorm_test_orm").then(() => {
 			return orm.use("sandstorm_test_orm");
@@ -49,11 +51,10 @@ describe("orm", () => {
 			const wait = [];
 			for (let a = 0; a < num; a++) {
 				const model = orm.create("FindOne");
-				model.set({
+				wait.push(model.set({
 					key: "key" + a,
 					value: "value" + a
-				});
-				wait.push(model.save());
+				}).then((model) => model.save()));
 			}
 			Promise.all(wait).then(() => {
 				const wait = [];
@@ -78,36 +79,36 @@ describe("orm", () => {
 			const num = 10;
 			const wait = [];
 			const sub = orm.create("Sub");
-			sub.set({name: "sub"});
-			for (let a = 0; a < num; a++) {
-				const model = orm.create("FindOne");
-				model.set({
-					key: "skey" + a,
-					value: "value" + a,
-					sub
-				});
-				wait.push(model.save());
-			}
-			Promise.all(wait).then(() => {
-				const wait = [];
+			sub.set({name: "sub"}).then(() => {
 				for (let a = 0; a < num; a++) {
-					wait.push(orm.findOne("FindOne", {key: "skey" + a}, {hydrate: ["Sub"]}));
-				}
-				return Promise.all(wait);
-			}).then((results) => {
-				results.forEach((model, a) => {
-					const result = model.get();
-					result.sub = result.sub.get();
-					delete result._id;
-					delete result.sub._id;
-					assert.deepStrictEqual(result, {
+					const model = orm.create("FindOne");
+					wait.push(model.set({
 						key: "skey" + a,
 						value: "value" + a,
-						sub: {name: "sub"}
+						sub
+					}).then(model => model.save()));
+				}
+				Promise.all(wait).then(() => {
+					const wait = [];
+					for (let a = 0; a < num; a++) {
+						wait.push(orm.findOne("FindOne", {key: "skey" + a}, {hydrate: ["Sub"]}));
+					}
+					return Promise.all(wait);
+				}).then((results) => {
+					results.forEach((model, a) => {
+						const result = model.get();
+						result.sub = result.sub.get();
+						delete result._id;
+						delete result.sub._id;
+						assert.deepStrictEqual(result, {
+							key: "skey" + a,
+							value: "value" + a,
+							sub: {name: "sub"}
+						});
 					});
-				});
-				done();
-			}).catch(done);
+					done();
+				}).catch(done);
+			});
 		});
 		it("not existing", (done) => {
 			orm.findOne("FindOne", {key: "not existing"}).then((res) => {
@@ -125,7 +126,9 @@ describe("orm", () => {
 				value: "String"
 			});
 			Promise.all((new Array(10)).fill(0).map((_, idx) => {
-				return orm.create("Get").set({key: "" + idx}).save().then(idx => idxs.push(idx));
+				return orm.create("Get").set({key: "" + idx}).then((model) => {
+					return model.save().then(idx => idxs.push(idx));
+				});
 			})).then(() => {
 				done();
 			}).catch(done);

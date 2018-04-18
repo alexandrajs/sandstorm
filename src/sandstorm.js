@@ -17,7 +17,7 @@ const ExtError = require("exterror");
 
 /**
  *
- * @param {Object} options
+ * @param {Object} [options]
  * @param {Object|Redis} options.redisClient
  * @constructor
  */

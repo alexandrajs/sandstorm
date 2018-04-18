@@ -3,6 +3,9 @@
  */
 "use strict";
 const ExtError = require("exterror");
+const Promise = require("bluebird");
+const fast = require("fast.js");
+const ObjectID = require("mongodb").ObjectID;
 
 /**
  *
@@ -22,26 +25,23 @@ function Model(orm, name, data) {
 }
 
 module.exports = Model;
-const fast = require("fast.js");
 const types = require("./types");
 const common = require("./common");
-const Promise = require("bluebird");
-const ObjectID = require("mongodb").ObjectID;
 /**
  *
  * @param {Object} properties
+ * @return {Promise<Model>}
  */
 Model.prototype.set = function (properties) {
-	_set(this, properties);
-	return this;
+	return _set(this, properties);
 };
 /**
  *
  * @param {Object} properties
+ * @return {Promise<Model>}
  */
 Model.prototype.merge = function (properties) {
-	_set(this, properties, true);
-	return this;
+	return _set(this, properties, true);
 };
 /**
  *
@@ -76,7 +76,7 @@ Model.prototype.delete = function () {
 };
 /**
  *
- * @param {Array} names
+ * @param {Array} [names]
  * @returns {Promise}
  */
 Model.prototype.hydrate = function (names) {
@@ -229,6 +229,7 @@ function _get(model, options) {
  * @param {Model} model
  * @param {Object} properties
  * @param {boolean} [merge]
+ * @returns {Promise<Model>}
  * @private
  */
 function _set(model, properties, merge) {
@@ -236,50 +237,54 @@ function _set(model, properties, merge) {
 		model.overwrite = true;
 		model.data = {_id: model.data._id};
 	}
-	fast.object.forEach(properties, (item, targetKey) => {
-		if (targetKey === "_id") {
-			if (model.data._id) {
-				throw new ExtError("ERR_CANT_OVERWRITE_ID", "Can not overwrite model '_id'");
-			}
-			if (!merge) {
-				if (typeof item === "string") {
-					item = new ObjectID(item);
+	return model.hydrate().then(() => {
+		const await = [];
+		fast.object.forEach(properties, (item, targetKey) => {
+			if (targetKey === "_id") {
+				if (model.data._id) {
+					throw new ExtError("ERR_CANT_OVERWRITE_ID", "Can not overwrite model '_id'");
 				}
-				if (!(item instanceof ObjectID)) {
-					throw new ExtError("ERR_ID_MUST_BE_OBJECTID", "Value of '_id' must be instance of ObjectID or string, got " + typeof item);
-				}
-				model.data[targetKey] = item;
-				model._set[targetKey] = item;
-				return;
-			}
-		}
-		if (!model.schema.properties[targetKey]) {
-			throw new ExtError("ERR_PROPERTY_NOT_ALLOWED", "Property '" + targetKey + "' not allowed");
-		}
-		const type = model.schema.properties[targetKey].type;
-		if (type in types) {
-			return types[type].set(model, model.data, model._set, model.schema.properties[targetKey], targetKey, item);
-		}
-		if (type in model.orm.schemas) {
-			if (common.isPlainObject(item)) {
-				const data = item;
-				item = new Model(model.orm, type);
 				if (!merge) {
-					item.set(data);
-				} else {
-					item.merge(data);
+					if (typeof item === "string") {
+						item = new ObjectID(item);
+					}
+					if (!(item instanceof ObjectID)) {
+						throw new ExtError("ERR_ID_MUST_BE_OBJECTID", "Value of '_id' must be instance of ObjectID or string, got " + typeof item);
+					}
+					model.data[targetKey] = item;
+					model._set[targetKey] = item;
+					return;
 				}
 			}
-			if (item instanceof Model) {
-				if (item.name !== type) {
-					throw new ExtError("ERR_WRONG_MODEL_TYPE", "Expect value of '" + targetKey + "' to be instance of Model or plain object, got " + typeof item);
-				}
-				model.data[targetKey] = item;
-				model._set[targetKey] = item;
-				return;
+			if (!model.schema.properties[targetKey]) {
+				throw new ExtError("ERR_PROPERTY_NOT_ALLOWED", "Property '" + targetKey + "' not allowed");
 			}
-		}
-		throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + targetKey + "' to be one of base types or model, got " + type);
+			const type = model.schema.properties[targetKey].type;
+			if (type in types) {
+				return await.push(types[type].set(model, model.data, model._set, model.schema.properties[targetKey], targetKey, item));
+			}
+			if (type in model.orm.schemas) {
+				if (common.isPlainObject(item)) {
+					const data = item;
+					item = new Model(model.orm, type);
+					if (!merge) {
+						await.push(item.set(data));
+					} else {
+						await.push(item.merge(data));
+					}
+				}
+				if (item instanceof Model) {
+					if (item.name !== type) {
+						throw new ExtError("ERR_WRONG_MODEL_TYPE", "Expect value of '" + targetKey + "' to be instance of Model or plain object, got " + typeof item);
+					}
+					model.data[targetKey] = item;
+					model._set[targetKey] = item;
+					return;
+				}
+			}
+			throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + targetKey + "' to be one of base types or model, got " + type);
+		});
+		return Promise.all(await).then(() => model);
 	});
 }
 
@@ -315,7 +320,7 @@ function _save_embedded(model) {
  */
 function _save_embedded_model(model, embedded, wait) {
 	if (embedded instanceof Model) {
-		common.pushUnique(model._hydrated, embedded.name);
+		//common.pushUnique(model._hydrated, embedded.name);
 		wait.push(embedded.save());
 	}
 }
@@ -323,16 +328,16 @@ function _save_embedded_model(model, embedded, wait) {
 /**
  *
  * @param {Model} model
- * @param {Array} names
+ * @param {Array} [names]
  * @returns {Promise}
  * @private
  */
 function _hydrate(model, names) {
 	const wait = [];
 	const dependencies = model.orm.schemas[model.name].dependencies;
-	fast.array.forEach(names, (name) => {
+	fast.array.forEach(names || Object.keys(dependencies), (name) => {
 		const dependency = dependencies[name];
-		if (dependency) {
+		if (dependency && !~model._hydrated.indexOf(name)) {
 			fast.object.forEach(dependency, (embedded, path) => {
 				common.pathMap(model.data, path, (embedded, key, target) => {
 					if (embedded instanceof Array) {
@@ -343,7 +348,10 @@ function _hydrate(model, names) {
 			});
 		}
 	});
-	return Promise.all(wait).then(() => model);
+	return Promise.all(wait).then(() => {
+		fast.array.forEach(names || Object.keys(dependencies), (name) => common.pushUnique(model._hydrated, name));
+		return model;
+	});
 }
 
 /**
@@ -383,6 +391,7 @@ function _dehydrate(model) {
 			});
 		});
 	});
+	model._hydrated = [];
 }
 
 /**

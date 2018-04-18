@@ -47,9 +47,7 @@ Cursor.prototype.toArray = function (options) {
 		if (this.options.raw && !this.options.hydrate.length) {
 			return docs;
 		}
-		const models = docs.map((doc) => {
-			return common.docToModel(this.orm, this.name, doc);
-		});
+		const models = docs.map((doc) => common.docToModel(this.orm, this.name, doc));
 		if (this.options.hydrate.length) {
 			return Promise.all(models.map((model) => {
 				return model.hydrate(this.options.hydrate);

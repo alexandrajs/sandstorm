@@ -41,7 +41,7 @@ Schema.prototype.export = function () {
  * @param {string} name
  * @param {Object} blueprint
  * @param {Object} blueprint.$options
- * @param {Array<{fieldOrSpec: String|Object, [collation]:Object}>} blueprint.$options.indexes
+ * @param {Array<{[fieldOrSpec]: String|Object, [collation]:Object}>} blueprint.$options.indexes
  * @param {Object} blueprint.$options.collation
  */
 Schema.prototype.register = function register(name, blueprint) {

@@ -30,7 +30,7 @@
   "dependencies": {
     "amule": "^0.2.2",
     "amule-aim": "^0.4.4",
-    "amule-more": "^0.1.5",
+    "amule-more": "^0.1.6",
     "amule-rush": "^0.3.2",
     "bluebird": "^3.5.1",
     "exterror": "^1.1.0",

@@ -193,7 +193,7 @@ function setTargetItem(parameters) {
 		if (isPlainObject(item)) {
 			const {_id, ...data} = item;
 			if (_id) {
-				await = model.orm.get(type, _id).then(nested => {
+				return model.orm.get(type, _id).then(nested => {
 					target[key][target_key] = set[key][target_key] = nested;
 					return nested.merge(data);
 				});

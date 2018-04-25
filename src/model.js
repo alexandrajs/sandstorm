@@ -242,7 +242,7 @@ function _set(model, properties, merge) {
 		fast.object.forEach(properties, (item, targetKey) => {
 			if (targetKey === "_id") {
 				if (model.data._id) {
-					throw new ExtError("ERR_CANT_OVERWRITE_ID", "Can not overwrite model '_id'");
+					throw new ExtError("ERR_CANT_OVERWRITE_ID", "Can't overwrite model '_id'");
 				}
 				if (!merge) {
 					if (typeof item === "string") {
@@ -251,8 +251,7 @@ function _set(model, properties, merge) {
 					if (!(item instanceof ObjectID)) {
 						throw new ExtError("ERR_ID_MUST_BE_OBJECTID", "Value of '_id' must be instance of ObjectID or string, got " + typeof item);
 					}
-					model.data[targetKey] = item;
-					model._set[targetKey] = item;
+					model.data[targetKey] = model._set[targetKey] = item;
 					return;
 				}
 			}
@@ -265,24 +264,26 @@ function _set(model, properties, merge) {
 			}
 			if (type in model.orm.schemas) {
 				if (common.isPlainObject(item)) {
-					const data = item;
-					item = new Model(model.orm, type);
-					if (!merge) {
-						await.push(item.set(data));
+					const {_id, ...data} = item;
+					if (_id) {
+						await.push(model.orm.get(type, _id).then(nested => {
+							model.data[targetKey] = model._set[targetKey] = nested;
+							return nested.merge(data);
+						}));
 					} else {
-						await.push(item.merge(data));
+						item = new Model(model.orm, type);
+						await.push(item.set(data));
 					}
 				}
 				if (item instanceof Model) {
 					if (item.name !== type) {
-						throw new ExtError("ERR_WRONG_MODEL_TYPE", "Expect value of '" + targetKey + "' to be instance of Model or plain object, got " + typeof item);
+						throw new ExtError("ERR_WRONG_MODEL_TYPE", "Expected value of '" + targetKey + "' to be instance of '" + type + "', got '" + item.name + "'");
 					}
-					model.data[targetKey] = item;
-					model._set[targetKey] = item;
+					model.data[targetKey] = model._set[targetKey] = item;
 					return;
 				}
 			}
-			throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + targetKey + "' to be one of base types or model, got " + type);
+			throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + targetKey + "' to be one of base types or model, got '" + typeof item + "'");
 		});
 		return Promise.all(await).then(() => model);
 	});

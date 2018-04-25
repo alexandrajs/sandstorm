@@ -5,6 +5,7 @@
 const fast = require("fast.js");
 const ExtError = require("exterror");
 const Promise = require("bluebird");
+
 /**
  *
  * @param {Object} object
@@ -190,11 +191,12 @@ function setTargetItem(parameters) {
 	if (type in model.orm.schemas) {
 		let await = Promise.resolve();
 		if (isPlainObject(item)) {
-			const data = item;
-			if (data._id) {
-				item = new Model(model.orm, type, {_id: data._id});
-				delete data._id;
-				await = item.merge(data);
+			const {_id, ...data} = item;
+			if (_id) {
+				await = model.orm.get(type, _id).then(nested => {
+					target[key][target_key] = set[key][target_key] = nested;
+					return nested.merge(data);
+				});
 			} else {
 				item = new Model(model.orm, type);
 				await = item.set(data);
@@ -202,8 +204,7 @@ function setTargetItem(parameters) {
 		}
 		if (item instanceof Model) {
 			if (item.name === type) {
-				target[key][target_key] = item;
-				set[key][target_key] = item;
+				target[key][target_key] = set[key][target_key] = item;
 				return await;
 			}
 		}

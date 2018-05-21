@@ -119,7 +119,7 @@ function _save_set(model, resolve, reject) {
 			resolve(doc._id);
 		};
 		if (model.data._id) {
-			if (typeof model.data._id === "string") {
+			if (typeof model.data._id === "string" && !model.schema.properties.hasOwnProperty("_id")) {
 				model.data._id = new ObjectID(model.data._id);
 			}
 			return collection.replaceOne({_id: model.data._id}, doc, {upsert: true}, _save_set_cb);
@@ -139,7 +139,7 @@ function _save_merge(model, resolve, reject) {
 	if (!model.data._id) {
 		return reject(new ExtError("ERR_MISSING_ID_ON_MERGE_SAVE", "Missing '_id' on merge save"));
 	}
-	const _id = typeof model.data._id === "string" ? new ObjectID(model.data._id) : model.data._id;
+	const _id = (typeof model.data._id === "string" && !model.schema.properties.hasOwnProperty("_id")) ? new ObjectID(model.data._id) : model.data._id;
 	if (common.isEmpty(model._set)) {
 		return resolve(_id);
 	}
@@ -203,7 +203,7 @@ function _delete(model) {
  */
 function _get(model, options) {
 	const properties = {};
-	if (model.data._id) {
+	if (model.data._id && !model.schema.properties.hasOwnProperty("_id")) {
 		properties._id = new ObjectID(model.data._id);
 	}
 	fast.object.forEach(model.schema.properties, (property, propertyKey) => {
@@ -240,7 +240,7 @@ function _set(model, properties, merge) {
 	return model.hydrate().then(() => {
 		const await = [];
 		fast.object.forEach(properties, (item, targetKey) => {
-			if (targetKey === "_id") {
+			if (targetKey === "_id" && !model.schema.properties.hasOwnProperty("_id")) {
 				if (model.data._id) {
 					throw new ExtError("ERR_CANT_OVERWRITE_ID", "Can't overwrite model '_id'");
 				}
@@ -266,7 +266,7 @@ function _set(model, properties, merge) {
 				if (common.isPlainObject(item)) {
 					const {_id, ...data} = item;
 					if (_id) {
-						await.push(model.orm.get(type, _id).then(nested => {
+						return await.push(model.orm.get(type, _id).then(nested => {
 							model.data[targetKey] = model._set[targetKey] = nested;
 							return nested.merge(data);
 						}));

@@ -123,8 +123,8 @@ describe("cursor", () => {
 			.then((results) => {
 				assert(results.length === 2);
 				const dry = results.map(_ => _.get());
-				assert(dry.shift().array[0].get().name === "One0");
-				assert(dry.shift().array[0].get().name === "One1");
+				assert.equal(dry.shift().array[0].get().name, "One0");
+				assert.equal(dry.shift().array[0].get().name, "One1");
 				done();
 			}).catch(done);
 	});
@@ -133,8 +133,8 @@ describe("cursor", () => {
 			.then((results) => {
 				assert(results.length === 2);
 				const dry = results.map(_ => _.get());
-				assert(dry.shift().array[0].get().name === "One9");
-				assert(dry.shift().array[0].get().name === "One8");
+				assert.equal(dry.shift().array[0].get().name, "One9");
+				assert.equal(dry.shift().array[0].get().name, "One8");
 				done();
 			}).catch(done);
 	});

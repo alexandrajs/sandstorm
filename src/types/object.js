@@ -7,6 +7,7 @@ const fast = require("fast.js");
 const common = require("../common");
 const ExtError = require("exterror");
 const Promise = require("bluebird");
+
 /**
  *
  * @param model

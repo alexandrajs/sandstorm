@@ -18,11 +18,22 @@ const ExtError = require("exterror");
 /**
  *
  * @param {Object} [options]
- * @param {Object|Redis} options.redisClient
+ * @param {Object} options.cache
+ * @param {string} options.cache.prefix
+ * @param {Object} options.cache.l0
+ * @param {Object} options.cache.l1
+ * @param {Object} options.cache.l2
  * @constructor
  */
 function Sandstorm(options) {
-	this.options = {cache: {prefix: ""}};
+	this.options = {
+		cache: {
+			prefix: "",
+			l0: {},
+			l1: {},
+			l2: {}
+		}
+	};
 	fast.assign(this.options, options || {});
 	/**
 	 * @type {Object}
@@ -204,14 +215,12 @@ function _init_cache(orm, name) {
 		return __caches[cache_name];
 	}
 	const mule = new AMule();
-	const aim = new Aim({cache: false});
-	const rush = new Rush({
+	const aim = new Aim(fast.assign({cache: false}, orm.options.l0 || {}));
+	const rush = new Rush(fast.assign({
 		client: orm.options.redisClient,
 		prefix: name + "_"
-	});
-	const more = new More({
-		db: orm.db
-	});
+	}, orm.options.l1 || {}));
+	const more = new More(orm.db, fast.assign({}, orm.options.l2 || {}));
 	mule.use(aim);
 	mule.use(rush);
 	mule.use(more);

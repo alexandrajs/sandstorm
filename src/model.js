@@ -336,13 +336,14 @@ function _save_embedded_model(model, embedded, wait) {
 function _hydrate(model, names) {
 	const wait = [];
 	const dependencies = model.orm.schemas[model.name].dependencies;
-	fast.array.forEach(names || Object.keys(dependencies), (name) => {
+	const hydrate = names || Object.keys(dependencies);
+	fast.array.forEach(hydrate, (name) => {
 		const dependency = dependencies[name];
 		if (dependency && !~model._hydrated.indexOf(name)) {
 			fast.object.forEach(dependency, (embedded, path) => {
 				common.pathMap(model.data, path, (embedded, key, target) => {
 					if (embedded instanceof Array) {
-						return fast.array.forEach(embedded, (embedded, key, target) => _hydrate_object(model, names, target, key, name, embedded, wait));
+						return fast.array.forEach(embedded, (sub_embedded, sub_key, sub_target) => _hydrate_object(model, names, sub_target, sub_key, name, sub_embedded, wait));
 					}
 					_hydrate_object(model, names, target, key, name, embedded, wait);
 				});
@@ -350,7 +351,7 @@ function _hydrate(model, names) {
 		}
 	});
 	return Promise.all(wait).then(() => {
-		fast.array.forEach(names || Object.keys(dependencies), (name) => common.pushUnique(model._hydrated, name));
+		fast.array.forEach(hydrate, (name) => common.pushUnique(model._hydrated, name));
 		return model;
 	});
 }

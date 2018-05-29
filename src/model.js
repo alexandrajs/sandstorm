@@ -264,7 +264,9 @@ function _set(model, properties, merge) {
 			}
 			if (type in model.orm.schemas) {
 				if (common.isPlainObject(item)) {
-					const {_id, ...data} = item;
+					const data = fast.assign({}, item);
+					const _id = data._id;
+					delete data._id;
 					if (_id) {
 						return await.push(model.orm.get(type, _id).then(nested => {
 							model.data[targetKey] = model._set[targetKey] = nested;

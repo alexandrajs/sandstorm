@@ -1,6 +1,6 @@
 {
   "name": "sandstorm",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Not a MongoDB ORM",
   "main": "./index.js",
   "scripts": {
@@ -31,10 +31,10 @@
     "mongodb": "^3.0.8"
   },
   "dependencies": {
-    "amule": "^0.2.3",
-    "amule-aim": "^0.5.2",
-    "amule-more": "^0.2.0",
-    "amule-rush": "^0.3.3",
+    "amule": "^0.2.4",
+    "amule-aim": "^0.5.3",
+    "amule-more": "^0.2.1",
+    "amule-rush": "^0.3.4",
     "bluebird": "^3.5.1",
     "exterror": "^1.1.0",
     "fast.js": "^0.1.1",

@@ -28,7 +28,6 @@ const ExtError = require("exterror");
 function Sandstorm(options) {
 	this.options = {
 		cache: {
-			prefix: "",
 			l0: {},
 			l1: {},
 			l2: {}
@@ -215,12 +214,9 @@ function _init_cache(orm, name) {
 		return __caches[cache_name];
 	}
 	const mule = new AMule();
-	const aim = new Aim(fast.assign({cache: false}, orm.options.l0 || {}));
-	const rush = new Rush(fast.assign({
-		client: orm.options.redisClient,
-		prefix: name + "_"
-	}, orm.options.l1 || {}));
-	const more = new More(orm.db, fast.assign({}, orm.options.l2 || {}));
+	const aim = new Aim(fast.assign({cache: false}, orm.options.cache.l0 || {}));
+	const rush = new Rush(fast.assign({prefix: name + "_"}, orm.options.cache.l1 || {}));
+	const more = new More(orm.db, fast.assign({}, orm.options.cache.l2 || {}));
 	mule.use(aim);
 	mule.use(rush);
 	mule.use(more);

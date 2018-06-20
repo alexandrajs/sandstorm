@@ -1,6 +1,6 @@
 {
   "name": "sandstorm",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Not a MongoDB ORM",
   "main": "./index.js",
   "scripts": {
@@ -28,7 +28,7 @@
   },
   "homepage": "https://github.com/alexandrajs/sandstorm#readme",
   "peerDependencies": {
-    "mongodb": "^3.0.8"
+    "mongodb": "^3.0.10"
   },
   "dependencies": {
     "amule": "^0.2.4",
@@ -48,6 +48,6 @@
     "jsdoc": "^3.5.5",
     "mocha": "^5.2.0",
     "mocha-lcov-reporter": "^1.3.0",
-    "mongodb": "^3.0.8"
+    "mongodb": "^3.0.10"
   }
 }

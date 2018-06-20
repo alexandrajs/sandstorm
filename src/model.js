@@ -109,7 +109,7 @@ function _save_set(model, resolve, reject) {
 		if (err) {
 			return reject(err);
 		}
-		const doc = model.get();
+		const doc = _get(model);
 		const _save_set_cb = (err) => {
 			if (err) {
 				return reject(err);
@@ -143,7 +143,13 @@ function _save_merge(model, resolve, reject) {
 	if (common.isEmpty(model._set)) {
 		return resolve(_id);
 	}
-	const update = {$set: common.objectToDotNotation(model._set)};
+	const update = {
+		$set: common.objectToDotNotation(_get(model, {
+			dry: false,
+			key: "_set",
+			properties: Object.keys(model._set)
+		}))
+	};
 	model.orm.db.collection(model.name, (err, collection) => {
 		if (err) {
 			return reject(err);
@@ -202,21 +208,28 @@ function _delete(model) {
  * @private
  */
 function _get(model, options) {
+	options = options || {
+		dry: false,
+		key: "data",
+		properties: null
+	};
+	const _get_key = options.key in model ? options.key : "data";
+	const source = model[_get_key];
 	const properties = {};
-	if (model.data._id && !model.schema.properties.hasOwnProperty("_id")) {
-		properties._id = new ObjectID(model.data._id);
+	if (source._id && !model.schema.properties.hasOwnProperty("_id")) {
+		properties._id = new ObjectID(source._id);
 	}
-	fast.object.forEach(model.schema.properties, (property, propertyKey) => {
+	fast.array.forEach(options.properties || Object.keys(model.schema.properties), (propertyKey) => {
 		const type = model.schema.properties[propertyKey].type;
 		if (type in types) {
-			const value = types[type].get(model.data, model.schema.properties[propertyKey], propertyKey);
+			const value = types[type].get(source, model.schema.properties[propertyKey], propertyKey);
 			if (value !== null && value !== undefined) {
 				properties[propertyKey] = value;
 			}
 			return;
 		}
 		if (type in model.orm.schemas) {
-			properties[propertyKey] = model.data[propertyKey];
+			properties[propertyKey] = source[propertyKey];
 			return;
 		}
 		throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + propertyKey + "' to be one of base types or model, got " + type);

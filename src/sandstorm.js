@@ -19,7 +19,6 @@ const ExtError = require("exterror");
  *
  * @param {Object} [options]
  * @param {Object} options.cache
- * @param {string} options.cache.prefix
  * @param {Object} options.cache.l0
  * @param {Object} options.cache.l1
  * @param {Object} options.cache.l2

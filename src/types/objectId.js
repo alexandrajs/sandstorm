@@ -33,7 +33,7 @@ function _set(model, target, set, schema, key, value) {
  * @returns {*}
  */
 function set(model, target, set, schema, key, value) {
-	if (typeof value === "string") {
+	if (typeof value === "string" && schema.coerce) {
 		try {
 			value = new ObjectID(value);
 		} catch (e) {

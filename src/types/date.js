@@ -32,6 +32,12 @@ function _set(model, target, set, schema, key, value) {
  * @returns {*}
  */
 function set(model, target, set, schema, key, value) {
+	if (typeof value === "string" && schema.coerce) {
+		value = new Date(value);
+		if (isNaN(value)) {
+			return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be instance of Date, got string"));
+		}
+	}
 	if (!(value instanceof Date)) {
 		return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be instance of Date, got " + typeof value));
 	}

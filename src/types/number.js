@@ -38,6 +38,9 @@ function _set(model, target, set, schema, key, value) {
  * @returns {*}
  */
 function set(model, target, set, schema, key, value) {
+	if (typeof value === "string" && schema.coerce) {
+		value = +value;
+	}
 	if (value !== value) {
 		return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be number, got NaN"));
 	}

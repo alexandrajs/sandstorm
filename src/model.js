@@ -57,9 +57,11 @@ Model.prototype.get = function (options) {
  */
 Model.prototype.save = function () {
 	return new Promise((resolve, reject) => {
-		_save_embedded(this).then(() => {
-			this.dehydrate();
-			if (this.data._id && !this.overwrite) {
+		const merge = this.data._id && !this.overwrite;
+		const key = merge ? "_set" : "data";
+		_save_embedded(this, {key}).then(() => {
+			this.dehydrate({key});
+			if (merge) {
 				return _save_merge(this, resolve, reject);
 			}
 			_save_set(this, resolve, reject);
@@ -85,8 +87,8 @@ Model.prototype.hydrate = function (names) {
 /**
  * @returns {Model}
  */
-Model.prototype.dehydrate = function () {
-	_dehydrate(this);
+Model.prototype.dehydrate = function (options) {
+	_dehydrate(this, options);
 	return this;
 };
 /**
@@ -212,7 +214,7 @@ function _get(model, options) {
 		dry: false,
 		key: "data",
 		properties: null
-	};
+	}; // FIXME (assign)
 	const _get_key = options.key in model ? options.key : "data";
 	const source = model[_get_key];
 	const properties = {};
@@ -307,14 +309,17 @@ function _set(model, properties, merge) {
 /**
  *
  * @param {Model} model
+ * @param [options]
  * @returns {Promise}
  * @private
  */
-function _save_embedded(model) {
+function _save_embedded(model, options) {
+	options = options || {key: "data"};// FIXME (assign)
+	const source = model[options.key];// FIXME check if exists
 	const wait = [];
 	fast.object.forEach(model.orm.schemas[model.name].dependencies, (paths) => {
 		fast.object.forEach(paths, (embed, path) => {
-			common.pathMap(model.data, path, (embedded) => {
+			common.pathMap(source, path, (embedded) => {
 				if (embedded instanceof Array) {
 					return fast.array.forEach(embedded, (embed) => {
 						_save_embedded_model(model, embed, wait);
@@ -395,14 +400,18 @@ function _hydrate_object(model, names, target, key, name, embedded, wait) {
 /**
  *
  * @param {Model} model
+ * @param [options]
  * @private
  */
-function _dehydrate(model) {
+function _dehydrate(model, options) {
+	options = options || {key: "data"}; // FIXME (assign)
 	fast.object.forEach(model.orm.schemas[model.name].dependencies, (dependencies) => {
 		fast.object.forEach(dependencies, (dependency, path) => {
-			common.pathMap(model.data, path, (embedded, key, target) => {
+			common.pathMap(model[options.key]/* FIXME check if exists */, path, (embedded, key, target) => {
 				if (embedded instanceof Array) {
 					return fast.array.forEach(embedded, (embed, key, target) => _dehydrate_model(embed, key, target, dependency));
+				} else if (common.isPlainObject(embedded)) {
+					return fast.object.forEach(embedded, (embed, key, target) => _dehydrate_model(embed, key, target, dependency));
 				}
 				_dehydrate_model(embedded, key, target, dependency);
 			});
@@ -421,6 +430,7 @@ function _dehydrate(model) {
  */
 function _dehydrate_model(embedded, key, target, embed) {
 	if (embedded instanceof Model) {
+		embedded.dehydrate();
 		const data = embedded.get();
 		target[key] = _extractProperties(data, embed);
 		target[key]._id = data._id;

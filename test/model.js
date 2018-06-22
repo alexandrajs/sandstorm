@@ -255,6 +255,17 @@ describe("model", () => {
 			await embed.save();
 		});
 		it("base merge", async function () {
+			const _embed = orm.create('Embed');
+			await _embed.set({
+				name: "in_root",
+				value: "don't embed this"
+			});
+			await _embed.save();
+			const _embed_in_oa = orm.create('Embed');
+			await _embed_in_oa.merge({
+				name: "in_object_array",
+				value: "don't embed this"
+			});
 			const model = orm.create("Base");
 			await model.merge({
 				array: [
@@ -265,20 +276,14 @@ describe("model", () => {
 				],
 				object: {
 					array: [
-						{
-							name: "in_object_array",
-							value: "don't embed this"
-						}
+						_embed_in_oa
 					],
 					embed: {
 						name: "in_object",
 						value: "don't embed this"
 					}
 				},
-				embed: {
-					name: "in_root",
-					value: "don't embed this"
-				}
+				embed : _embed
 			});
 			await model.save();
 			let _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
@@ -297,6 +302,8 @@ describe("model", () => {
 			const embed = await orm.get("Embed", _doc.object.array[0]._id);
 			await embed.merge({name: "updated"});
 			await embed.save();
+			await model.merge({embed: {name:"embed updated"}});
+			await model.save();
 		});
 	});
 });

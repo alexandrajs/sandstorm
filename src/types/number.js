@@ -34,11 +34,11 @@ function _set(model, target, set, schema, key, value) {
  * @param set
  * @param schema
  * @param key
- * @param {number} value
+ * @param {number|*} value
  * @returns {*}
  */
 function set(model, target, set, schema, key, value) {
-	if (typeof value === "string" && schema.coerce) {
+	if (typeof value === "string" && value.trim().length && schema.coerce) {
 		value = +value;
 	}
 	if (value !== value) {

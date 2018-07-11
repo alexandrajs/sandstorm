@@ -60,7 +60,7 @@ describe("types", () => {
 						schema: {type: "Array"},
 						value: new Array(),
 						expected: [],
-						name: "string object"
+						name: "Array object"
 					},
 					{
 						schema: {
@@ -187,7 +187,7 @@ describe("types", () => {
 						schema: {type: "Boolean"},
 						value: new Boolean(true),
 						expected: true,
-						name: "boolean object"
+						name: "Boolean object"
 					},
 					{
 						schema: {

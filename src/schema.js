@@ -71,7 +71,7 @@ Schema.prototype.register = function register(name, blueprint) {
 		properties: {},
 		dependencies: dependencies,
 		dependents: dependents,
-		options: blueprint.$options || {}
+		options: fast.assign({engine: "mongodb"}, blueprint.$options || {})
 	};
 	delete blueprint.$options;
 	this.orm.schemas[name] = schema;

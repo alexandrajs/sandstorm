@@ -103,14 +103,14 @@ MongoDB.prototype.save_set = function (model, resolve, reject) {
 				return reject(err);
 			}
 			model._set = {};
-			model.data._id = doc._id;
-			resolve(doc._id);
+			model.data[model.primaryKey] = doc[model.primaryKey];
+			resolve(doc[model.primaryKey]);
 		};
-		if (model.data._id) {
-			if (typeof model.data._id === "string" && !model.schema.properties.hasOwnProperty("_id")) {
-				model.data._id = new ObjectID(model.data._id);
+		if (model.data[model.primaryKey]) {
+			if (typeof model.data[model.primaryKey] === "string" && !model.schema.properties.hasOwnProperty(model.primaryKey)) {
+				model.data[model.primaryKey] = new ObjectID(model.data[model.primaryKey]);
 			}
-			return collection.replaceOne({_id: model.data._id}, doc, {upsert: true}, _save_set_cb);
+			return collection.replaceOne({[model.primaryKey]: model.data[model.primaryKey]}, doc, {upsert: true}, _save_set_cb);
 		}
 		collection.insertOne(doc, _save_set_cb);
 	});
@@ -123,10 +123,10 @@ MongoDB.prototype.save_set = function (model, resolve, reject) {
  * @private
  */
 MongoDB.prototype.save_merge = function (model, resolve, reject) {
-	if (!model.data._id) {
-		return reject(new ExtError("ERR_MISSING_ID_ON_MERGE_SAVE", "Missing '_id' on merge save"));
+	if (!model.data[model.primaryKey]) {
+		return reject(new ExtError("ERR_MISSING_PRIMARY_KEY_ON_MERGE_SAVE", "Missing '" + model.primaryKey + "' on merge save"));
 	}
-	const _id = (typeof model.data._id === "string" && !model.schema.properties.hasOwnProperty("_id")) ? new ObjectID(model.data._id) : model.data._id;
+	const _id = (typeof model.data[model.primaryKey] === "string" && !model.schema.properties.hasOwnProperty(model.primaryKey)) ? new ObjectID(model.data[model.primaryKey]) : model.data[model.primaryKey];
 	if (common.isEmpty(model._set)) {
 		return resolve(_id);
 	}
@@ -142,11 +142,11 @@ MongoDB.prototype.save_merge = function (model, resolve, reject) {
 			return reject(err);
 		}
 		model._set = {};
-		collection.updateOne({_id: _id}, update, {upsert: true}, (err) => {
+		collection.updateOne({[model.primaryKey]: _id}, update, {upsert: true}, (err) => {
 			if (err) {
 				return reject(err);
 			}
-			this.cache.delete(model.name, model.data._id, (err) => {
+			this.cache.delete(model.name, model.data[model.primaryKey], (err) => {
 				if (err) {
 					return reject(err);
 				}
@@ -163,10 +163,10 @@ MongoDB.prototype.save_merge = function (model, resolve, reject) {
  */
 MongoDB.prototype.delete = function (model) {
 	return new Promise((resolve, reject) => {
-		if (!model.data._id) {
+		if (!model.data[model.primaryKey]) {
 			return resolve();
 		}
-		this.cache.delete(model.name, model.data._id, (err) => {
+		this.cache.delete(model.name, model.data[model.primaryKey], (err) => {
 			if (err) {
 				return reject(err);
 			}
@@ -174,7 +174,7 @@ MongoDB.prototype.delete = function (model) {
 				if (err) {
 					return reject(err);
 				}
-				collection.deleteOne({_id: model.data._id}, (err) => {
+				collection.deleteOne({[model.primaryKey]: model.data[model.primaryKey]}, (err) => {
 					if (err) {
 						return reject(err);
 					}

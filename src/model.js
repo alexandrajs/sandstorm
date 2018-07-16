@@ -18,6 +18,7 @@ function Model(orm, name, data) {
 	this.orm = orm;
 	this.name = name;
 	this.schema = this.orm.schemas[name];
+	this.primaryKey = this.schema.options.primaryKey;
 	this.engine = this.orm.engines[this.schema.options.engine];
 	this.data = fast.assign({}, data || {});
 	this.overwrite = false;
@@ -58,7 +59,7 @@ Model.prototype.get = function (options) {
  */
 Model.prototype.save = function () {
 	return new Promise((resolve, reject) => {
-		const merge = this.data._id && !this.overwrite;
+		const merge = this.data[this.primaryKey] && !this.overwrite;
 		const key = merge ? "_set" : "data";
 		_save_embedded(this, {key}).then(() => {
 			this.dehydrate({key});
@@ -108,16 +109,16 @@ Model.prototype.toJSON = function () {
  * @private
  */
 function _get(model, options) {
-	options = options || {
+	options = fast.assign({
 		dry: false,
 		key: "data",
 		properties: null
-	}; // FIXME (assign)
+	}, options || {});
 	const _get_key = options.key in model ? options.key : "data";
 	const source = model[_get_key];
 	const properties = {};
-	if (source._id && !model.schema.properties.hasOwnProperty("_id")) {
-		properties._id = new ObjectID(source._id);
+	if (source[model.primaryKey] && !model.schema.properties.hasOwnProperty(model.primaryKey)) {
+		properties[model.primaryKey] = new ObjectID(source[model.primaryKey]);
 	}
 	fast.array.forEach(options.properties || Object.keys(model.schema.properties), (propertyKey) => {
 		const type = model.schema.properties[propertyKey].type;
@@ -148,21 +149,21 @@ function _get(model, options) {
 function _set(model, properties, merge) {
 	if (!merge) {
 		model.overwrite = true;
-		model.data = {_id: model.data._id};
+		model.data = {[model.primaryKey]: model.data[model.primaryKey]};
 	}
 	return model.hydrate().then(() => {
 		const await = [];
 		fast.object.forEach(properties, (item, targetKey) => {
-			if (targetKey === "_id" && !model.schema.properties.hasOwnProperty("_id")) {
-				if (model.data._id) {
-					throw new ExtError("ERR_CANT_OVERWRITE_ID", "Can't overwrite model '_id'");
+			if (targetKey === model.primaryKey && !model.schema.properties.hasOwnProperty(model.primaryKey)) {
+				if (model.data[model.primaryKey]) {
+					throw new ExtError("ERR_CANT_OVERWRITE_PRIMARY_KEY", "Can't overwrite model '" + model.primaryKey + "'");
 				}
 				if (!merge) {
 					if (typeof item === "string") {
 						item = new ObjectID(item);
 					}
 					if (!(item instanceof ObjectID)) {
-						throw new ExtError("ERR_ID_MUST_BE_OBJECTID", "Value of '_id' must be instance of ObjectID or string, got " + typeof item);
+						throw new ExtError("ERR_PRIMARY_KEY_MUST_BE_OBJECTID", "Value of '" + model.primaryKey + "' must be instance of ObjectID or string, got " + typeof item);
 					}
 					model.data[targetKey] = model._set[targetKey] = item;
 					return;
@@ -178,8 +179,8 @@ function _set(model, properties, merge) {
 			if (type in model.orm.schemas) {
 				if (common.isPlainObject(item)) {
 					const data = fast.assign({}, item);
-					const _id = data._id;
-					delete data._id;
+					const _id = data[model.orm.schemas[type].options.primaryKey];
+					delete data[model.orm.schemas[type].options.primaryKey];
 					if (_id) {
 						return await.push(model.orm.get(type, _id).then(nested => {
 							model.data[targetKey] = model._set[targetKey] = nested;
@@ -212,7 +213,7 @@ function _set(model, properties, merge) {
  * @private
  */
 function _save_embedded(model, options) {
-	options = options || {key: "data"};// FIXME (assign)
+	options = fast.assign({key: "data"}, options || {});
 	const source = model[options.key];// FIXME check if exists
 	const wait = [];
 	fast.object.forEach(model.orm.schemas[model.name].dependencies, (paths) => {
@@ -289,7 +290,7 @@ function _hydrate_object(model, names, target, key, name, embedded, wait) {
 	if (!common.isPlainObject(embedded)) {
 		return;
 	}
-	wait.push(model.orm.get(name, embedded._id).then(_ => {
+	wait.push(model.orm.get(name, embedded[model.orm.schemas[name].options.primaryKey]).then(_ => {
 		_.hydrate(names);
 		target[key] = _;
 	}));
@@ -302,7 +303,7 @@ function _hydrate_object(model, names, target, key, name, embedded, wait) {
  * @private
  */
 function _dehydrate(model, options) {
-	options = options || {key: "data"}; // FIXME (assign)
+	options = fast.assign({key: "data"}, options || {});
 	fast.object.forEach(model.orm.schemas[model.name].dependencies, (dependencies) => {
 		fast.object.forEach(dependencies, (dependency, path) => {
 			common.pathMap(model[options.key]/* FIXME check if exists */, path, (embedded, key, target) => {
@@ -331,7 +332,7 @@ function _dehydrate_model(embedded, key, target, embed) {
 		embedded.dehydrate();
 		const data = embedded.get();
 		target[key] = _extractProperties(data, embed);
-		target[key]._id = data._id;
+		target[key][embedded.primaryKey] = data[embedded.primaryKey];
 	}
 }
 

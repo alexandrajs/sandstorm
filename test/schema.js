@@ -269,7 +269,10 @@ describe("basic types", () => {
 				},
 				dependencies: {},
 				dependents: {},
-				options: {engine: "mongodb"}
+				options: {
+					engine: "mongodb",
+					primaryKey: "_id"
+				}
 			}
 		});
 	});

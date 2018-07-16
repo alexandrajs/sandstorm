@@ -192,8 +192,8 @@ function setTargetItem(parameters) {
 		let await = Promise.resolve();
 		if (isPlainObject(item)) {
 			const data = fast.assign({}, item);
-			const _id = data._id;
-			delete data._id;
+			const _id = data[model.primaryKey];
+			delete data[model.primaryKey];
 			if (_id) {
 				return model.orm.get(type, _id).then(nested => {
 					target[key][target_key] = set[key][target_key] = nested;

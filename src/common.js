@@ -37,7 +37,7 @@ function isPlainObject(value) {
  * @param {function} callback
  */
 function ormGet(orm, name, id, callback) {
-	orm.cache.get(name, id, callback);
+	orm.engines[orm.schemas[name].options.engine].cache.get(name, id, callback);
 }
 
 /**

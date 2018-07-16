@@ -3,7 +3,7 @@
  * @ignore
  */
 const assert = require("assert");
-const {ObjectID, MongoClient} = require("mongodb");
+const {ObjectID} = require("mongodb");
 /**
  *
  * @type {Sandstorm}
@@ -11,22 +11,22 @@ const {ObjectID, MongoClient} = require("mongodb");
 const Orm = require("../");
 describe("model", () => {
 	describe("set", () => {
-		const orm = new Orm();
+		const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 		orm.register("Set", {name: "String"});
 		it("not existing prop", (done) => {
 			const model = orm.create("Set");
 			model.set({notExisting: "key"}).then(() => done(new Error("Exception expected"))).catch(() => done());
 		});
 	});
-	it("toJSON", () => {
-		const orm = new Orm();
+	it("toJSON", async () => {
+		const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 		orm.register("ToJson", {name: "String"});
 		const model = orm.create("ToJson");
-		model.set({name: "key"});
+		await model.set({name: "key"});
 		assert.strictEqual(model.toJSON(), model.data);
 	});
 	describe("base", () => {
-		const orm = new Orm();
+		const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 		let _db = null;
 		before((done) => {
 			orm.Schema.register("Base", {
@@ -39,8 +39,8 @@ describe("model", () => {
 				objId: "ObjectID",
 				string: "String"
 			});
-			orm.connect("mongodb://localhost/sandstorm_test_model_base").then(() => {
-				return orm.use("sandstorm_test_model_base");
+			orm.engines.mongodb.connect("mongodb://localhost/sandstorm_test_model_base").then(() => {
+				return orm.engines.mongodb.use("sandstorm_test_model_base");
 			}).then((db) => {
 				_db = db;
 				return _db.dropDatabase();
@@ -49,7 +49,7 @@ describe("model", () => {
 			}).catch(done);
 		});
 		after((done) => {
-			orm.disconnect().then(() => {
+			orm.engines.mongodb.disconnect().then(() => {
 				done();
 			}).catch(done);
 		});
@@ -165,10 +165,10 @@ describe("model", () => {
 	});
 	describe("embed", () => {
 		let _db = null;
-		const orm = new Orm();
+		const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 		before((done) => {
-			orm.connect("mongodb://localhost/sandstorm_test_model_embed").then(() => {
-				return orm.use("sandstorm_test_model_embed");
+			orm.engines.mongodb.connect("mongodb://localhost/sandstorm_test_model_embed").then(() => {
+				return orm.engines.mongodb.use("sandstorm_test_model_embed");
 			}).then((db) => {
 				_db = db;
 				return _db.dropDatabase();
@@ -206,7 +206,7 @@ describe("model", () => {
 			}).catch(done);
 		});
 		after((done) => {
-			orm.disconnect().then(() => {
+			orm.engines.mongodb.disconnect().then(() => {
 				done();
 			}).catch(done);
 		});
@@ -255,13 +255,13 @@ describe("model", () => {
 			await embed.save();
 		});
 		it("base merge", async function () {
-			const _embed = orm.create('Embed');
+			const _embed = orm.create("Embed");
 			await _embed.set({
 				name: "in_root",
 				value: "don't embed this"
 			});
 			await _embed.save();
-			const _embed_in_oa = orm.create('Embed');
+			const _embed_in_oa = orm.create("Embed");
 			await _embed_in_oa.merge({
 				name: "in_object_array",
 				value: "don't embed this"
@@ -283,7 +283,7 @@ describe("model", () => {
 						value: "don't embed this"
 					}
 				},
-				embed : _embed
+				embed: _embed
 			});
 			await model.save();
 			let _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
@@ -302,7 +302,7 @@ describe("model", () => {
 			const embed = await orm.get("Embed", _doc.object.array[0]._id);
 			await embed.merge({name: "updated"});
 			await embed.save();
-			await model.merge({embed: {name:"embed updated"}});
+			await model.merge({embed: {name: "embed updated"}});
 			await model.save();
 		});
 	});

@@ -18,6 +18,7 @@ function Model(orm, name, data) {
 	this.orm = orm;
 	this.name = name;
 	this.schema = this.orm.schemas[name];
+	this.engine = this.orm.engines[this.schema.options.engine];
 	this.data = fast.assign({}, data || {});
 	this.overwrite = false;
 	this._set = {};
@@ -62,9 +63,9 @@ Model.prototype.save = function () {
 		_save_embedded(this, {key}).then(() => {
 			this.dehydrate({key});
 			if (merge) {
-				return _save_merge(this, resolve, reject);
+				return this.engine.save_merge(this, resolve, reject);
 			}
-			_save_set(this, resolve, reject);
+			this.engine.save_set(this, resolve, reject);
 			this.overwrite = false;
 		}).catch(reject);
 	});
@@ -74,7 +75,7 @@ Model.prototype.save = function () {
  * @returns {Promise}
  */
 Model.prototype.delete = function () {
-	return _delete(this);
+	return this.engine.delete(this);
 };
 /**
  *
@@ -98,109 +99,6 @@ Model.prototype.dehydrate = function (options) {
 Model.prototype.toJSON = function () {
 	return this.data;
 };
-
-/**
- *
- * @param {Model} model
- * @param {function} resolve
- * @param {function} reject
- * @private
- */
-function _save_set(model, resolve, reject) {
-	model.orm.db.collection(model.name, (err, collection) => {
-		if (err) {
-			return reject(err);
-		}
-		const doc = _get(model);
-		const _save_set_cb = (err) => {
-			if (err) {
-				return reject(err);
-			}
-			model._set = {};
-			model.data._id = doc._id;
-			resolve(doc._id);
-		};
-		if (model.data._id) {
-			if (typeof model.data._id === "string" && !model.schema.properties.hasOwnProperty("_id")) {
-				model.data._id = new ObjectID(model.data._id);
-			}
-			return collection.replaceOne({_id: model.data._id}, doc, {upsert: true}, _save_set_cb);
-		}
-		collection.insertOne(doc, _save_set_cb);
-	});
-}
-
-/**
- *
- * @param {Model} model
- * @param {function} resolve
- * @param {function} reject
- * @private
- */
-function _save_merge(model, resolve, reject) {
-	if (!model.data._id) {
-		return reject(new ExtError("ERR_MISSING_ID_ON_MERGE_SAVE", "Missing '_id' on merge save"));
-	}
-	const _id = (typeof model.data._id === "string" && !model.schema.properties.hasOwnProperty("_id")) ? new ObjectID(model.data._id) : model.data._id;
-	if (common.isEmpty(model._set)) {
-		return resolve(_id);
-	}
-	const update = {
-		$set: common.objectToDotNotation(_get(model, {
-			dry: false,
-			key: "_set",
-			properties: Object.keys(model._set)
-		}))
-	};
-	model.orm.db.collection(model.name, (err, collection) => {
-		if (err) {
-			return reject(err);
-		}
-		model._set = {};
-		collection.updateOne({_id: _id}, update, {upsert: true}, (err) => {
-			if (err) {
-				return reject(err);
-			}
-			model.orm.cache.delete(model.name, model.data._id, (err) => {
-				if (err) {
-					return reject(err);
-				}
-				resolve(_id);
-			});
-		});
-	});
-}
-
-/**
- *
- * @param {Model} model
- * @returns {Promise}
- * @private
- */
-function _delete(model) {
-	return new Promise((resolve, reject) => {
-		if (!model.data._id) {
-			return resolve();
-		}
-		model.orm.cache.delete(model.name, model.data._id, (err) => {
-			if (err) {
-				return reject(err);
-			}
-			model.orm.db.collection(model.name, (err, collection) => {
-				if (err) {
-					return reject(err);
-				}
-				collection.deleteOne({_id: model.data._id}, (err) => {
-					if (err) {
-						return reject(err);
-					}
-					model.orm = model.name = model.schema = model.data = model.overwrite = model._set = model._hydrated = null;
-					resolve();
-				});
-			});
-		});
-	});
-}
 
 /**
  *
@@ -463,7 +361,5 @@ Model[Symbol.for("private")] = {
 	_hydrate_object,
 	_save_embedded,
 	_save_embedded_model,
-	_save_merge,
-	_save_set,
 	_set
 };

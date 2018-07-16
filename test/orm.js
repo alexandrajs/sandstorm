@@ -11,7 +11,7 @@ const assert = require("assert");
  * @type {Sandstorm}
  */
 const Orm = require("../");
-const orm = new Orm();
+const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 orm.Schema.register("Base", {
 	array: "Array",
 	bool: "Boolean",
@@ -25,11 +25,11 @@ orm.Schema.register("Base", {
 let _db = null;
 describe("orm", () => {
 	after(async () => {
-		await orm.disconnect();
+		await orm.engines.mongodb.disconnect();
 	});
 	before((done) => {
-		orm.connect("mongodb://localhost/sandstorm_test_orm").then(() => {
-			return orm.use("sandstorm_test_orm");
+		orm.engines.mongodb.connect("mongodb://localhost/sandstorm_test_orm").then(() => {
+			return orm.engines.mongodb.use("sandstorm_test_orm");
 		}).then((db) => {
 			_db = db;
 			return _db.dropDatabase();

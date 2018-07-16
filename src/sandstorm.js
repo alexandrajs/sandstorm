@@ -5,34 +5,18 @@
 const fast = require("fast.js");
 const Model = require("./model");
 const Schema = require("./schema");
-const Cursor = require("./cursor");
 const common = require("./common");
-const mongodb = require("mongodb");
-const AMule = require("amule");
-const Aim = require("amule-aim");
-const Rush = require("amule-rush");
-const More = require("amule-more");
 const Promise = require("bluebird");
 const ExtError = require("exterror");
+const Engines = require("./engines");
 
 /**
  *
- * @param {Object} [options]
- * @param {Object} options.cache
- * @param {Object} options.cache.l0
- * @param {Object} options.cache.l1
- * @param {Object} options.cache.l2
+ * @param {Object} engines
+
  * @constructor
  */
-function Sandstorm(options) {
-	this.options = {
-		cache: {
-			l0: {},
-			l1: {},
-			l2: {}
-		}
-	};
-	fast.assign(this.options, options || {});
+function Sandstorm(engines) {
 	/**
 	 * @type {Object}
 	 */
@@ -41,58 +25,15 @@ function Sandstorm(options) {
 	 * @type {Schema}
 	 */
 	this.Schema = new Schema(this);
+	// Sandstorm with engines
+	fast.object.forEach(engines || {}, engine => engine.orm = this);
 	/**
-	 * @type {Db|null}
+	 * @type {Object}
 	 */
-	this.db = null;
-	/**
-	 * @type {MongoClient|null}
-	 */
-	this.client = null;
-	/**
-	 * @type {AMule}
-	 */
-	this.cache = null;
-	/**
-	 *
-	 * @type {string}
-	 * @private
-	 */
-	this._connectionString = "";
+	this.engines = engines;
 }
 
-/**
- * Connect to MongoDD using given connection string
- * @param {string} connectionString
- * @returns {Promise<MongoClient>}
- */
-Sandstorm.prototype.connect = function (connectionString) {
-	this._connectionString = "";
-	return mongodb.MongoClient.connect(connectionString).then((client) => {
-		this._connectionString = connectionString;
-		this.client = client;
-		return client;
-	});
-};
-/**
- * Select database to use
- * @param {string} dbName
- * @returns {Promise<Db>}
- */
-Sandstorm.prototype.use = function (dbName) {
-	this.db = this.client.db(dbName);
-	this.cache = _init_cache(this, dbName);
-	return _ensure_indexes(this.db, this.schemas);
-};
-/**
- * Disconnects from server
- */
-Sandstorm.prototype.disconnect = function () {
-	this.cache.pop();
-	this.cache.pop().client.disconnect(); // Redis disconnect
-	this.cache = null;
-	return this.client && this.client.close(true);
-};
+Sandstorm.Engines = Engines;
 /**
  * Create new model
  * @param {string} name
@@ -116,7 +57,7 @@ Sandstorm.prototype.create = function (name, data) {
  * @returns {Cursor}
  */
 Sandstorm.prototype.find = function (name, query, options) {
-	return new Cursor(this.db.collection(name).find(query, fast.assign({}, this.schemas[name].options || {}, options || {})), this, name, this.schemas[name].options);
+	return this.engines[this.schemas[name].options.engine].find(this, name, query, options);
 };
 /**
  * Find one document
@@ -126,17 +67,7 @@ Sandstorm.prototype.find = function (name, query, options) {
  * @returns {Promise}
  */
 Sandstorm.prototype.findOne = function (name, query, options) {
-	options = options || {};
-	return this.db.collection(name).findOne(query, options).then((doc) => {
-		if (!doc) {
-			return doc;
-		}
-		const model = common.docToModel(this, name, doc);
-		if (options.hydrate && options.hydrate.length) {
-			return model.hydrate(options.hydrate);
-		}
-		return model;
-	});
+	return this.engines[this.schemas[name].options.engine].findOne(this, name, query, options);
 };
 /* istanbul ignore next */
 /**
@@ -147,7 +78,7 @@ Sandstorm.prototype.findOne = function (name, query, options) {
  * @returns {AggregationCursor}
  */
 Sandstorm.prototype.aggregate = function (name, pipeline, options) {
-	return this.db.collection(name).aggregate(pipeline, options);
+	return this.engines[this.schemas[name].options.engine].aggregate(this, name, pipeline, options);
 };
 /**
  * Get one or more models
@@ -199,62 +130,3 @@ Sandstorm.prototype.register = function (name, blueprint) {
 };
 module.exports = Sandstorm;
 module.exports.Schema = Schema;
-const __caches = {};
-
-/**
- * @param {Sandstorm} orm
- * @param {string} name
- * @returns {AMule}
- * @private
- */
-function _init_cache(orm, name) {
-	const cache_name = orm._connectionString + "_" + name;
-	if (cache_name in __caches) {
-		return __caches[cache_name];
-	}
-	const mule = new AMule();
-	const aim = new Aim(fast.assign({cache: false}, orm.options.cache.l0 || {}));
-	const rush = new Rush(fast.assign({prefix: name + "_"}, orm.options.cache.l1 || {}));
-	const more = new More(orm.db, fast.assign({}, orm.options.cache.l2 || {}));
-	mule.use(aim);
-	mule.use(rush);
-	mule.use(more);
-	__caches[cache_name] = mule;
-	return mule;
-}
-
-/**
- *
- * @param {Db} db
- * @param {Object} schemas
- * @returns {Promise<Db>}
- * @private
- */
-function _ensure_indexes(db, schemas) {
-	const wait = [];
-	fast.object.forEach(schemas, (schema, name) => {
-		const indexes = schema.options.indexes;
-		indexes && wait.push(new Promise((resolve, reject) => {
-			db.collection(name, (err, collection) => {
-				if (err) {
-					return reject(err);
-				}
-				resolve(Promise.all(fast.array.map(indexes, (index) => {
-					if (!common.isPlainObject(index)) {
-						return Promise.reject(new ExtError("ERR_COLLECTION_INDEX_MUST_BE_OBJECT", "Collection index must be plain object"));
-					}
-					if (typeof index.fieldOrSpec !== "string" && !common.isPlainObject(index.fieldOrSpec)) {
-						return Promise.reject(new ExtError("ERR_COLLECTION_INDEX_FIELDORSPEC_MUST_BE_OBJECTOR_STRING", "Collection index.fieldOrSpec must be plain object or string"));
-					}
-					const options = fast.assign({}, index.options || {});
-					const collation = fast.object.clone(schema.options.collation || {});
-					if (!common.isEmpty(collation) && !options.collation) {
-						options.collation = collation;
-					}
-					return collection.createIndex(index.fieldOrSpec, common.isEmpty(options) ? undefined : options);
-				})));
-			});
-		}));
-	});
-	return Promise.all(wait).then(() => db);
-}

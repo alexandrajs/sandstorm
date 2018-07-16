@@ -2,7 +2,7 @@
  * @author Michał Żaloudik <ponury.kostek@gmail.com>
  */
 "use strict";
-const common = require("./common");
+const Model = require("../../model");
 const fast = require("fast.js");
 const Promise = require("bluebird");
 const ExtError = require("exterror");
@@ -47,7 +47,7 @@ Cursor.prototype.toArray = function (options) {
 		if (this.options.raw && !this.options.hydrate.length) {
 			return docs;
 		}
-		const models = docs.map((doc) => common.docToModel(this.orm, this.name, doc));
+		const models = docs.map((doc) => new Model(this.orm, this.name, doc));
 		if (this.options.hydrate.length) {
 			return Promise.all(models.map((model) => {
 				return model.hydrate(this.options.hydrate);
@@ -137,7 +137,7 @@ Cursor.prototype.count = function (applySkipLimit, options) {
  */
 Cursor.prototype.hydrate = function (names) {
 	if (!(names instanceof Array)) {
-		throw new ExtError("");
+		throw new ExtError("Must be array");
 	}
 	this.options.hydrate = names;
 	return this;

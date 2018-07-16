@@ -7,7 +7,7 @@ const {StringProperty} = require("../src/properties");
 const Orm = require("../");
 describe("$options", () => {
 	it("", (done) => {
-		const orm = new Orm();
+		const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 		orm.register("Sub", {
 			name: "String",
 			$options: {
@@ -23,21 +23,21 @@ describe("$options", () => {
 				}
 			}
 		});
-		orm.connect("mongodb://localhost/sandstorm_test_schema_options").then(() => {
-			return orm.use("sandstorm_test_schema_options");
+		orm.engines.mongodb.connect("mongodb://localhost/sandstorm_test_schema_options").then(() => {
+			return orm.engines.mongodb.use("sandstorm_test_schema_options");
 		}).then((db) => {
 			return db.collection("Sub");
 		}).then((collection) => {
 			return collection.listIndexes().toArray();
 		}).then(() => {
-			orm.disconnect();
+			orm.engines.mongodb.disconnect();
 			done();
 		}).catch(done);
 	});
 });
 describe("embedded schemas dependencies", () => {
 	describe("in array", () => {
-		const orm = new Orm();
+		const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 		orm.register("Sub", {
 			name: "String"
 		});
@@ -59,7 +59,7 @@ describe("embedded schemas dependencies", () => {
 		});
 	});
 	describe("in object", () => {
-		const orm = new Orm();
+		const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 		orm.register("Sub", {
 			name: "String"
 		});
@@ -223,14 +223,14 @@ describe("basic types", () => {
 			const test = tests[name];
 			name += " Schema";
 			it(name, () => {
-				const orm = new Orm();
+				const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 				orm.Schema.register(name, test.in);
 				assert.deepEqual(orm.schemas[name].properties.key, test.out);
 			});
 		});
 	});
 	it("import", () => {
-		const orm = new Orm();
+		const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 		orm.Schema.import({
 			Dummy: {
 				type: "Dummy",
@@ -255,7 +255,7 @@ describe("basic types", () => {
 		});
 	});
 	it("export", () => {
-		const orm = new Orm();
+		const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 		orm.Schema.register("Dummy", {
 			key: "String",
 			value: "String"
@@ -269,7 +269,7 @@ describe("basic types", () => {
 				},
 				dependencies: {},
 				dependents: {},
-				options: {}
+				options: {engine: "mongodb"}
 			}
 		});
 	});
@@ -286,7 +286,7 @@ describe("basic types", () => {
 			const test = tests[name];
 			name += " Schema";
 			it(name, () => {
-				const orm = new Orm();
+				const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 				assert.throws(() => {
 					orm.Schema.register(name, {key: test});
 				});
@@ -610,7 +610,7 @@ describe("basic types", () => {
 			const test = tests[name];
 			name += " Schema";
 			it(name, () => {
-				const orm = new Orm();
+				const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 				orm.Schema.register(name, test.in);
 				assert.deepEqual(orm.schemas[name].properties.key, test.out);
 			});

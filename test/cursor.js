@@ -12,7 +12,7 @@ const {ObjectID, MongoClient} = require("mongodb");
  * @type {Sandstorm}
  */
 const Orm = require("../");
-const orm = new Orm();
+const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 orm.register("Sub", {
 	name: "String",
 	value: "String"
@@ -38,11 +38,11 @@ orm.Schema.register("Collated", {
 let _db = null;
 describe("cursor", () => {
 	after(async () => {
-		await orm.disconnect();
+		await orm.engines.mongodb.disconnect();
 	});
 	before((done) => {
-		orm.connect("mongodb://localhost/sandstorm_test_cursor").then(() => {
-			return orm.use("sandstorm_test_cursor");
+		orm.engines.mongodb.connect("mongodb://localhost/sandstorm_test_cursor").then(() => {
+			return orm.engines.mongodb.use("sandstorm_test_cursor");
 		}).then((db) => {
 			_db = db;
 			return _db.dropDatabase();

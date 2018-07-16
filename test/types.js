@@ -8,15 +8,15 @@ const Orm = require("../");
 describe("types", () => {
 	describe("save + merge", () => {
 		describe("ObjectID", () => {
-			const orm = new Orm();
+			const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 			orm.register("test", {key: "ObjectID"});
 			let _db;
 			after(async () => {
-				await orm.disconnect();
+				await orm.engines.mongodb.disconnect();
 			});
 			before((done) => {
-				orm.connect("mongodb://localhost/sandstorm_test_types").then(() => {
-					return orm.use("sandstorm_test_types");
+				orm.engines.mongodb.connect("mongodb://localhost/sandstorm_test_types").then(() => {
+					return orm.engines.mongodb.use("sandstorm_test_types");
 				}).then((db) => {
 					_db = db;
 					return _db.dropDatabase();
@@ -156,7 +156,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, async () => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("sub", {key: "String"});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
@@ -200,7 +200,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, async () => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("sub", {key: "String"});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
@@ -239,7 +239,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, async () => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("sub", {key: "String"});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
@@ -283,7 +283,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, async () => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("sub", {key: "String"});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
@@ -359,7 +359,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, async () => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
 						if ("value" in test) {
@@ -442,7 +442,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, (done) => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("sub", {key: "String"});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
@@ -481,7 +481,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, (done) => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
 						if ("value" in test) {
@@ -519,7 +519,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, (done) => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
 						if ("value" in test) {
@@ -552,7 +552,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, (done) => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
 						if ("value" in test) {
@@ -611,7 +611,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, (done) => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
 						if ("value" in test) {
@@ -676,7 +676,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, (done) => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("sub", {key: test.schema});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
@@ -715,7 +715,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, (done) => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("sub", {key: test.schema});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
@@ -749,7 +749,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, (done) => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
 						if ("value" in test) {
@@ -819,7 +819,7 @@ describe("types", () => {
 					}
 				].forEach((test) => {
 					it(test.name, (done) => {
-						const orm = new Orm();
+						const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 						orm.register("test", {key: test.schema});
 						const model = orm.create("test");
 						if ("value" in test) {

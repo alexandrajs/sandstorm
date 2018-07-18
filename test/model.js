@@ -39,7 +39,7 @@ describe("model", () => {
 				objId: "ObjectID",
 				string: "String"
 			});
-			orm.engines.mongodb.connect("mongodb://localhost/sandstorm_test_model_base").then(() => {
+			orm.engines.mongodb.connect("mongodb://root:root@localhost/admin").then(() => {
 				return orm.engines.mongodb.use("sandstorm_test_model_base");
 			}).then((db) => {
 				_db = db;
@@ -167,7 +167,7 @@ describe("model", () => {
 		let _db = null;
 		const orm = new Orm({mongodb: new Orm.Engines.MongoDB()});
 		before((done) => {
-			orm.engines.mongodb.connect("mongodb://localhost/sandstorm_test_model_embed").then(() => {
+			orm.engines.mongodb.connect("mongodb://root:root@localhost/admin").then(() => {
 				return orm.engines.mongodb.use("sandstorm_test_model_embed");
 			}).then((db) => {
 				_db = db;

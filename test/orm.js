@@ -28,7 +28,7 @@ describe("orm", () => {
 		await orm.engines.mongodb.disconnect();
 	});
 	before((done) => {
-		orm.engines.mongodb.connect("mongodb://localhost/sandstorm_test_orm").then(() => {
+		orm.engines.mongodb.connect("mongodb://root:root@localhost/admin").then(() => {
 			return orm.engines.mongodb.use("sandstorm_test_orm");
 		}).then((db) => {
 			_db = db;

@@ -6,3 +6,4 @@ doc/
 build/
 coverage/
 npm-debug.log
+codeclimate.html

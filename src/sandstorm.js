@@ -33,6 +33,10 @@ function Sandstorm(engines) {
 	this.engines = engines;
 }
 
+/**
+ *
+ * @type {{MongoDB: MongoDB, MySQL: MySQL}}
+ */
 Sandstorm.Engines = Engines;
 /**
  * Create new model

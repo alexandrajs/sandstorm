@@ -23,7 +23,7 @@ describe("$options", () => {
 				}
 			}
 		});
-		orm.engines.mongodb.connect("mongodb://localhost/sandstorm_test_schema_options").then(() => {
+		orm.engines.mongodb.connect("mongodb://root:root@localhost/admin").then(() => {
 			return orm.engines.mongodb.use("sandstorm_test_schema_options");
 		}).then((db) => {
 			return db.collection("Sub");

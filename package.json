@@ -28,12 +28,14 @@
   },
   "homepage": "https://github.com/alexandrajs/sandstorm#readme",
   "peerDependencies": {
-    "mongodb": "^3.0.10"
+    "mongodb": "^3.0.10",
+    "mysql": "^2.15.0"
   },
   "dependencies": {
     "amule": "^0.2.4",
     "amule-aim": "^0.5.3",
     "amule-more": "^0.2.1",
+    "amule-myro": "0.0.1",
     "amule-rush": "^0.3.4",
     "bluebird": "^3.5.1",
     "exterror": "^1.1.0",
@@ -42,12 +44,13 @@
   },
   "devDependencies": {
     "benchmark": "^2.1.4",
-    "coveralls": "^3.0.1",
+    "coveralls": "^3.0.2",
     "ink-docstrap": "^1.3.2",
     "istanbul": "^0.4.5",
     "jsdoc": "^3.5.5",
     "mocha": "^5.2.0",
     "mocha-lcov-reporter": "^1.3.0",
-    "mongodb": "^3.0.10"
+    "mongodb": "^3.1.1",
+    "mysql": "^2.16.0"
   }
 }

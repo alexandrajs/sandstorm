@@ -64,7 +64,7 @@ Schema.prototype.register = function register(name, blueprint) {
 	const dependents = {};
 	/**
 	 *
-	 * @type {{type: string, properties: {}, dependencies: {}, dependents: {}, options: {indexes: Array<{fieldOrSpec: String|Object, collation?: Object}>, collation: Object}|{}}}
+	 * @type {{type: string, properties: {}, dependencies: {}, dependents: {}, options: {indexes?: Array<{fieldOrSpec: String|Object, collation?: Object}>, collation?: Object, engine : string, primaryKey: string}|{}}}
 	 */
 	const schema = {
 		type: name,

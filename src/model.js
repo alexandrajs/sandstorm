@@ -20,6 +20,9 @@ function Model(orm, name, data) {
 	this.schema = this.orm.schemas[name];
 	this.primaryKey = this.schema.options.primaryKey;
 	this.engine = this.orm.engines[this.schema.options.engine];
+	if (!this.engine) {
+		throw new ExtError("ERR_UNSUPPORTED_ENGINE", "Unsupported engine '" + this.schema.options.engine + "', in '" + this.name + "'");
+	}
 	this.data = fast.assign({}, data || {});
 	this.overwrite = false;
 	this._set = {};
@@ -118,7 +121,7 @@ function _get(model, options) {
 	const source = model[_get_key];
 	const properties = {};
 	if (source[model.primaryKey] && !model.schema.properties.hasOwnProperty(model.primaryKey)) {
-		properties[model.primaryKey] = new ObjectID(source[model.primaryKey]);
+		properties[model.primaryKey] = model.schema.options.engine === "mongodb" ? new ObjectID(source[model.primaryKey]) : source[model.primaryKey]; // FIXME
 	}
 	fast.array.forEach(options.properties || Object.keys(model.schema.properties), (propertyKey) => {
 		const type = model.schema.properties[propertyKey].type;
@@ -159,10 +162,10 @@ function _set(model, properties, merge) {
 					throw new ExtError("ERR_CANT_OVERWRITE_PRIMARY_KEY", "Can't overwrite model '" + model.primaryKey + "'");
 				}
 				if (!merge) {
-					if (typeof item === "string") {
+					if (model.schema.options.engine === "mongodb" && typeof item === "string") { // FIXME
 						item = new ObjectID(item);
 					}
-					if (!(item instanceof ObjectID)) {
+					if (model.schema.options.engine === "mongodb" && !(item instanceof ObjectID)) { // FIXME
 						throw new ExtError("ERR_PRIMARY_KEY_MUST_BE_OBJECTID", "Value of '" + model.primaryKey + "' must be instance of ObjectID or string, got " + typeof item);
 					}
 					model.data[targetKey] = model._set[targetKey] = item;

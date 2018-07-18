@@ -3,4 +3,12 @@
  */
 "use strict";
 const MongoDB = require("./mongodb");
-module.exports = {MongoDB};
+const MySQL = require("./mysql");
+/**
+ *
+ * @type {{MongoDB: MongoDB, MySQL: MySQL}}
+ */
+module.exports = {
+	MongoDB,
+	MySQL
+};

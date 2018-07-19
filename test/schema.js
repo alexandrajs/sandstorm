@@ -145,6 +145,7 @@ describe("basic types", () => {
 				in: {"key": "Date"},
 				out: {
 					type: "Date",
+					coerce: true,
 					required: false,
 					unique: false,
 					default: undefined,
@@ -166,6 +167,7 @@ describe("basic types", () => {
 				out: {
 					type: "Number",
 					required: false,
+					coerce: true,
 					unique: false,
 					default: undefined,
 					min: undefined,
@@ -198,6 +200,7 @@ describe("basic types", () => {
 				in: {"key": "ObjectID"},
 				out: {
 					type: "ObjectID",
+					coerce: true,
 					required: false,
 					unique: false,
 					default: undefined
@@ -422,6 +425,7 @@ describe("basic types", () => {
 					type: "Date",
 					required: true,
 					unique: false,
+					coerce: true,
 					default: date_default,
 					min: date_min,
 					max: date_max
@@ -459,6 +463,7 @@ describe("basic types", () => {
 					type: "Number",
 					required: true,
 					unique: false,
+					coerce: true,
 					default: 5.5,
 					min: 1,
 					max: 10,
@@ -551,6 +556,7 @@ describe("basic types", () => {
 				},
 				out: {
 					type: "ObjectID",
+					coerce: true,
 					required: true,
 					unique: false,
 					default: null

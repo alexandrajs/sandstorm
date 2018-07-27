@@ -68,10 +68,15 @@ function Sandstorm(options) {
  */
 Sandstorm.prototype.connect = function (connectionString) {
 	this._connectionString = "";
+	const cache_name = connectionString;
+	if (cache_name in __c_caches) {
+		this._connectionString = connectionString;
+		return this.client = __c_caches[cache_name];
+	}
 	return mongodb.MongoClient.connect(connectionString).then((client) => {
 		this._connectionString = connectionString;
 		this.client = client;
-		return client;
+		return __c_caches[cache_name] = client;
 	});
 };
 /**
@@ -88,6 +93,8 @@ Sandstorm.prototype.use = function (dbName) {
  * Disconnects from server
  */
 Sandstorm.prototype.disconnect = function () {
+	const cache_name = this._connectionString;
+	delete __c_caches[cache_name];
 	this.cache.pop();
 	this.cache.pop().client.disconnect(); // Redis disconnect
 	this.cache = null;
@@ -200,6 +207,7 @@ Sandstorm.prototype.register = function (name, blueprint) {
 module.exports = Sandstorm;
 module.exports.Schema = Schema;
 const __caches = {};
+const __c_caches = {};
 
 /**
  * @param {Sandstorm} orm

@@ -190,6 +190,9 @@ function setTargetItem(parameters) {
 	}
 	if (type in model.orm.schemas) {
 		let await = Promise.resolve();
+		if (typeof item === "string") {
+			item = {_id: item};
+		}
 		if (isPlainObject(item)) {
 			const data = fast.assign({}, item);
 			const _id = data._id;

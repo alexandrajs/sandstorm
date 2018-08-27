@@ -252,7 +252,7 @@ function _ensure_indexes(db, schemas) {
 						return Promise.reject(new ExtError("ERR_COLLECTION_INDEX_MUST_BE_OBJECT", "Collection index must be plain object"));
 					}
 					if (typeof index.fieldOrSpec !== "string" && !common.isPlainObject(index.fieldOrSpec)) {
-						return Promise.reject(new ExtError("ERR_COLLECTION_INDEX_FIELDORSPEC_MUST_BE_OBJECTOR_STRING", "Collection index.fieldOrSpec must be plain object or string"));
+						return Promise.reject(new ExtError("ERR_COLLECTION_INDEX_FIELD_OR_SPEC_MUST_BE_OBJECT_OR_STRING", "Collection index.fieldOrSpec must be plain object or string"));
 					}
 					const options = fast.assign({}, index.options || {});
 					const collation = fast.object.clone(schema.options.collation || {});

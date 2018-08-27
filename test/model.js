@@ -9,7 +9,7 @@ const {ObjectID, MongoClient} = require("mongodb");
  * @type {Sandstorm}
  */
 const Orm = require("../");
-describe("model", () => {
+describe("Model", () => {
 	describe("set", () => {
 		const orm = new Orm();
 		orm.register("Set", {name: "String"});

@@ -23,13 +23,13 @@ orm.Schema.register("Base", {
 	string: "String"
 });
 let _db = null;
-describe("orm", () => {
+describe("Sandstorm", () => {
 	after(async () => {
 		await orm.disconnect();
 	});
 	before((done) => {
-		orm.connect("mongodb://localhost/sandstorm_test_orm").then(() => {
-			return orm.use("sandstorm_test_orm");
+		orm.connect("mongodb://localhost/sandstorm_test").then(() => {
+			return orm.use("sandstorm_test");
 		}).then((db) => {
 			_db = db;
 			return _db.dropDatabase();

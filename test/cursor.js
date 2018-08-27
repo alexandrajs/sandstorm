@@ -36,7 +36,7 @@ orm.Schema.register("Collated", {
 	]
 });
 let _db = null;
-describe("cursor", () => {
+describe("Cursor", () => {
 	after(async () => {
 		await orm.disconnect();
 	});

@@ -216,7 +216,8 @@ describe("Schema", () => {
 						default: undefined,
 						min: undefined,
 						max: undefined,
-						pattern: undefined
+						pattern: undefined,
+						oneOf: undefined
 					}
 				}
 			};
@@ -509,7 +510,8 @@ describe("Schema", () => {
 								default: undefined,
 								min: undefined,
 								max: undefined,
-								pattern: undefined
+								pattern: undefined,
+								oneOf: undefined
 							}
 						}
 					}
@@ -539,7 +541,8 @@ describe("Schema", () => {
 										default: undefined,
 										min: undefined,
 										max: undefined,
-										pattern: undefined
+										pattern: undefined,
+										oneOf: undefined
 									}
 								}
 							}
@@ -582,7 +585,8 @@ describe("Schema", () => {
 						default: "string",
 						min: 1,
 						max: 10,
-						pattern: /^[a-z]*$/
+						pattern: /^[a-z]*$/,
+						oneOf: undefined
 					}
 				},
 				"String 2": {
@@ -593,7 +597,8 @@ describe("Schema", () => {
 							unique: false,
 							default: "string",
 							length: 5,
-							pattern: /^[a-z]*$/
+							pattern: /^[a-z]*$/,
+							oneOf: ["one", "of"]
 						}
 					},
 					out: {
@@ -603,7 +608,8 @@ describe("Schema", () => {
 						default: "string",
 						min: 5,
 						max: 5,
-						pattern: /^[a-z]*$/
+						pattern: /^[a-z]*$/,
+						oneOf: ["one", "of"]
 					}
 				}
 			};

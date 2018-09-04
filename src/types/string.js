@@ -27,6 +27,9 @@ function _set(model, target, set, schema, key, value) {
 	if (schema.pattern && !schema.pattern.test(value)) {
 		return Promise.reject(new ExtError("ERR_STRING_NOT_MATCH_PATTERN", "Value of '" + key + "' do not match pattern " + schema.pattern));
 	}
+	if(Array.isArray(schema.oneOf) && !~schema.oneOf.indexOf(value)) {
+		return Promise.reject(new ExtError("ERR_STRING_NOT_ONE_OF", "Value of '" + key + "' is not one of '" + schema.oneOf + "'"));
+	}
 	set[key] = target[key] = value;
 	return Promise.resolve();
 }

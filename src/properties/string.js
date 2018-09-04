@@ -19,6 +19,7 @@ function StringProperty(options) {
 	this.min = options.min;
 	this.max = options.max;
 	this.pattern = options.pattern;
+	this.oneOf = options.oneOf;
 }
 
 module.exports = StringProperty;

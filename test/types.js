@@ -351,6 +351,14 @@ describe("types", () => {
 					{
 						schema: {
 							type: "String",
+							oneOf: ["one", "of"]
+						},
+						value: "one",
+						name: "with oneOf"
+					},
+					{
+						schema: {
+							type: "String",
 							default: "value",
 							required: true
 						},
@@ -809,6 +817,14 @@ describe("types", () => {
 						},
 						value: "value 123",
 						name: "with pattern"
+					},
+					{
+						schema: {
+							type: "String",
+							oneOf: ["one", "of"]
+						},
+						value: "oneOf",
+						name: "with oneOf"
 					},
 					{
 						schema: {

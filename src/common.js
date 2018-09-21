@@ -5,6 +5,7 @@
 const fast = require("fast.js");
 const ExtError = require("exterror");
 const Promise = require("bluebird");
+const {ObjectID} = require("mongodb");
 
 /**
  *
@@ -37,7 +38,7 @@ function isPlainObject(value) {
  * @param {function} callback
  */
 function ormGet(orm, name, id, callback) {
-	orm.cache.get(name, id, callback);
+	orm.cache.get(name, (orm.schemas[name].properties.hasOwnProperty("_id") && orm.schemas[name].properties._id.type !== "ObjectID" ? id : new ObjectID(id)), callback);
 }
 
 /**

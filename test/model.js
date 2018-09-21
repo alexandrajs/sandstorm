@@ -30,6 +30,7 @@ describe("Model", () => {
 		let _db = null;
 		before((done) => {
 			orm.Schema.register("Base", {
+				_id: "String",
 				array: "Array",
 				bool: "Boolean",
 				date: "Date",
@@ -58,6 +59,7 @@ describe("Model", () => {
 			const date = new Date();
 			const objId = new ObjectID();
 			model.set({
+				_id: "Klucz",
 				array: [
 					1,
 					"a",
@@ -77,7 +79,7 @@ describe("Model", () => {
 			}).then((model) => {
 				return model.save();
 			}).then(async () => {
-				const _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
+				const _doc = await _db.collection("Base").findOne({_id: model.data._id});
 				assert.deepStrictEqual(_doc, {
 					_id: model.data._id,
 					array: [
@@ -106,9 +108,9 @@ describe("Model", () => {
 					]
 				}).then(model => model.save());
 			}).then(async () => {
-				const _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
-				delete _doc._id;
+				const _doc = await _db.collection("Base").findOne({_id: model.data._id});
 				assert.deepStrictEqual(_doc, {
+					_id: "Klucz",
 					object: {b: false},
 					array: [
 						1,
@@ -120,9 +122,9 @@ describe("Model", () => {
 					object: {c: 3}
 				}).then(model => model.save());
 			}).then(async () => {
-				let _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
-				delete _doc._id;
+				let _doc = await _db.collection("Base").findOne({_id: model.data._id});
 				assert.deepStrictEqual(_doc, {
+					_id: "Klucz",
 					object: {
 						b: false,
 						c: 3
@@ -137,10 +139,10 @@ describe("Model", () => {
 				assert.strictEqual(await cursor.count(), 1);
 				let doc = await cursor.toArray();
 				doc = doc.pop();
-				_doc = await _db.collection("Base").findOne({_id: new ObjectID(doc.data._id)});
+				_doc = await _db.collection("Base").findOne({_id: doc.data._id});
 				assert.deepStrictEqual(doc.data, _doc);
 				assert.deepStrictEqual(doc.data, doc.get());
-				const get = await orm.get("Base", new ObjectID(doc.data._id));
+				const get = await orm.get("Base", doc.data._id);
 				done();
 			}).catch(done);
 		});

@@ -29,7 +29,7 @@ function Sandstorm(options) {
 		cache: {
 			l0: {},
 			l1: {},
-			l2: {}
+			l2: {enforceObjectID: false}
 		}
 	};
 	fast.assign(this.options, options || {});

@@ -30,6 +30,7 @@ describe("Model", () => {
 		let _db = null;
 		before((done) => {
 			orm.Schema.register("Base", {
+				_id: "String",
 				array: "Array",
 				bool: "Boolean",
 				date: "Date",
@@ -58,6 +59,7 @@ describe("Model", () => {
 			const date = new Date();
 			const objId = new ObjectID();
 			model.set({
+				_id: "Klucz",
 				array: [
 					1,
 					"a",
@@ -77,7 +79,7 @@ describe("Model", () => {
 			}).then((model) => {
 				return model.save();
 			}).then(async () => {
-				const _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
+				const _doc = await _db.collection("Base").findOne({_id: model.data._id});
 				assert.deepStrictEqual(_doc, {
 					_id: model.data._id,
 					array: [
@@ -106,9 +108,9 @@ describe("Model", () => {
 					]
 				}).then(model => model.save());
 			}).then(async () => {
-				const _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
-				delete _doc._id;
+				const _doc = await _db.collection("Base").findOne({_id: model.data._id});
 				assert.deepStrictEqual(_doc, {
+					_id: "Klucz",
 					object: {b: false},
 					array: [
 						1,
@@ -120,9 +122,9 @@ describe("Model", () => {
 					object: {c: 3}
 				}).then(model => model.save());
 			}).then(async () => {
-				let _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
-				delete _doc._id;
+				let _doc = await _db.collection("Base").findOne({_id: model.data._id});
 				assert.deepStrictEqual(_doc, {
+					_id: "Klucz",
 					object: {
 						b: false,
 						c: 3
@@ -137,10 +139,10 @@ describe("Model", () => {
 				assert.strictEqual(await cursor.count(), 1);
 				let doc = await cursor.toArray();
 				doc = doc.pop();
-				_doc = await _db.collection("Base").findOne({_id: new ObjectID(doc.data._id)});
+				_doc = await _db.collection("Base").findOne({_id: doc.data._id});
 				assert.deepStrictEqual(doc.data, _doc);
 				assert.deepStrictEqual(doc.data, doc.get());
-				const get = await orm.get("Base", new ObjectID(doc.data._id));
+				const get = await orm.get("Base", doc.data._id);
 				done();
 			}).catch(done);
 		});
@@ -178,13 +180,16 @@ describe("Model", () => {
 					value: "String"
 				});
 				orm.Schema.register("Base", {
-					array: {
-						type: "Array",
-						item: {
-							type: "Embed",
-							embed: ["name"]
+					array: [
+						{
+							item: [
+								{
+									type: "Embed",
+									embed: ["name"]
+								}
+							]
 						}
-					},
+					],
 					embed: {
 						type: "Embed",
 						embed: ["name"]
@@ -215,8 +220,12 @@ describe("Model", () => {
 			await model.set({
 				array: [
 					{
-						name: "in_array",
-						value: "don't embed this"
+						item: [
+							{
+								name: "in_array",
+								value: "don't embed this"
+							}
+						]
 					}
 				],
 				object: {
@@ -240,8 +249,9 @@ describe("Model", () => {
 			let _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
 			assert(_doc.array instanceof Array);
 			assert(_doc.array.length === 1);
-			assert(_doc.array[0]._id instanceof ObjectID);
-			assert(_doc.array[0].name === "in_array");
+			assert(_doc.array[0].item.length === 1);
+			assert(_doc.array[0].item[0]._id instanceof ObjectID);
+			assert(_doc.array[0].item[0].name === "in_array");
 			assert(_doc.object.array instanceof Array);
 			assert(_doc.object.array.length === 1);
 			assert(_doc.object.array[0]._id instanceof ObjectID);
@@ -255,13 +265,13 @@ describe("Model", () => {
 			await embed.save();
 		});
 		it("base merge", async function () {
-			const _embed = orm.create('Embed');
+			const _embed = orm.create("Embed");
 			await _embed.set({
 				name: "in_root",
 				value: "don't embed this"
 			});
 			await _embed.save();
-			const _embed_in_oa = orm.create('Embed');
+			const _embed_in_oa = orm.create("Embed");
 			await _embed_in_oa.merge({
 				name: "in_object_array",
 				value: "don't embed this"
@@ -270,8 +280,12 @@ describe("Model", () => {
 			await model.merge({
 				array: [
 					{
-						name: "in_array",
-						value: "don't embed this"
+						item: [
+							{
+								name: "in_array",
+								value: "don't embed this"
+							}
+						]
 					}
 				],
 				object: {
@@ -283,14 +297,15 @@ describe("Model", () => {
 						value: "don't embed this"
 					}
 				},
-				embed : _embed
+				embed: _embed
 			});
 			await model.save();
 			let _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
 			assert(_doc.array instanceof Array);
 			assert(_doc.array.length === 1);
-			assert(_doc.array[0]._id instanceof ObjectID);
-			assert(_doc.array[0].name === "in_array");
+			assert(_doc.array[0].item.length === 1);
+			assert(_doc.array[0].item[0]._id instanceof ObjectID);
+			assert(_doc.array[0].item[0].name === "in_array");
 			assert(_doc.object.array instanceof Array);
 			assert(_doc.object.array.length === 1);
 			assert(_doc.object.array[0]._id instanceof ObjectID);
@@ -302,7 +317,7 @@ describe("Model", () => {
 			const embed = await orm.get("Embed", _doc.object.array[0]._id);
 			await embed.merge({name: "updated"});
 			await embed.save();
-			await model.merge({embed: {name:"embed updated"}});
+			await model.merge({embed: {name: "embed updated"}});
 			await model.save();
 		});
 	});

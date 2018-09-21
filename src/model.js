@@ -33,6 +33,9 @@ const common = require("./common");
  * @return {Promise<Model>}
  */
 Model.prototype.set = function (properties) {
+	if (!properties || typeof properties !== "object") {
+		return Promise.reject(new ExtError("ERR_MISSING_PROPERTIES_TO_SET", "Missing properties to set"));
+	}
 	return _set(this, properties);
 };
 /**
@@ -41,6 +44,9 @@ Model.prototype.set = function (properties) {
  * @return {Promise<Model>}
  */
 Model.prototype.merge = function (properties) {
+	if (!properties || typeof properties !== "object") {
+		return Promise.reject(new ExtError("ERR_MISSING_PROPERTIES_TO_MERGE", "Missing properties to merge"));
+	}
 	return _set(this, properties, true);
 };
 /**

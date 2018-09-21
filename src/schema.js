@@ -221,7 +221,7 @@ function _parseArrayProperty(property, path, schema, orm) {
 	if (property[0] !== null && typeof property[0] === "object") {
 		return {
 			type: "Array",
-			options: {item: _expandProperty(_parseObjectProperty(property[0], path, schema, orm), path, schema, orm)}
+			options: {item: _expandProperty(Array.isArray(property[0]) ? _parseArrayProperty(property[0], path, schema, orm) : _parseObjectProperty(property[0], path, schema, orm), path, schema, orm)}
 		};
 	}
 	throw new ExtError("ERR_UNSUPPORTED_ARRAY_ITEM_TYPE", "Unsupported array item type in '" + path.join(".") + "'");

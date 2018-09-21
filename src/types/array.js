@@ -33,23 +33,20 @@ function _set(model, target, set, schema, key, value) {
 	}
 	set[key] = [];
 	target[key] = [];
-	const await = [];
-	fast.array.forEach(value, (item, target_key) => {
-		const item_schema = schema.item;
-		await.push(common.setTargetItem({
+	return Promise.all(fast.array.map(value, (item, target_key) => {
+		return common.setTargetItem({
 			types,
 			model,
 			set,
 			target,
 			target_key,
 			item,
-			item_schema,
+			item_schema: schema.item,
 			type,
 			key,
 			value
-		}));
-	});
-	return Promise.all(await);
+		});
+	}));
 }
 
 /**

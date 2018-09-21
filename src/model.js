@@ -320,11 +320,6 @@ function _save_embedded(model, options) {
 	fast.object.forEach(model.orm.schemas[model.name].dependencies, (paths) => {
 		fast.object.forEach(paths, (embed, path) => {
 			common.pathMap(source, path, (embedded) => {
-				if (embedded instanceof Array) {
-					return fast.array.forEach(embedded, (embed) => {
-						_save_embedded_model(model, embed, wait);
-					});
-				}
 				_save_embedded_model(model, embedded, wait);
 			});
 		});
@@ -341,7 +336,6 @@ function _save_embedded(model, options) {
  */
 function _save_embedded_model(model, embedded, wait) {
 	if (embedded instanceof Model) {
-		//common.pushUnique(model._hydrated, embedded.name);
 		wait.push(embedded.save());
 	}
 }
@@ -408,11 +402,6 @@ function _dehydrate(model, options) {
 	fast.object.forEach(model.orm.schemas[model.name].dependencies, (dependencies) => {
 		fast.object.forEach(dependencies, (dependency, path) => {
 			common.pathMap(model[options.key]/* FIXME check if exists */, path, (embedded, key, target) => {
-				if (embedded instanceof Array) {
-					return fast.array.forEach(embedded, (embed, key, target) => _dehydrate_model(embed, key, target, dependency));
-				} else if (common.isPlainObject(embedded)) {
-					return fast.object.forEach(embedded, (embed, key, target) => _dehydrate_model(embed, key, target, dependency));
-				}
 				_dehydrate_model(embedded, key, target, dependency);
 			});
 		});
@@ -422,16 +411,16 @@ function _dehydrate(model, options) {
 
 /**
  *
- * @param {Model} embedded
+ * @param {Model} model
  * @param {string} key
  * @param {Object} target
  * @param {Array} embed
  * @private
  */
-function _dehydrate_model(embedded, key, target, embed) {
-	if (embedded instanceof Model) {
-		embedded.dehydrate();
-		const data = embedded.get();
+function _dehydrate_model(model, key, target, embed) {
+	if (model instanceof Model) {
+		model.dehydrate();
+		const data = model.get();
 		target[key] = _extractProperties(data, embed);
 		target[key]._id = data._id;
 	}

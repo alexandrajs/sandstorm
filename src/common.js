@@ -87,23 +87,34 @@ function pathMap(object, path, callback) {
 	if (typeof callback !== "function") {
 		throw new ExtError("ERR_PARAMETER_CALLBACK_MUST_BE_FUNCTION", "Parameter 'callback' must be function, got " + typeof callback);
 	}
-	const parts = path.split(".");
-	let current;
-	while (current = parts.shift()) {
-		if (!object) {
-			return;
+
+	function _pathMap(object, path, current_key, origin) {
+		if (Array.isArray(object)) {
+			return fast.array.map(object, (item, key) => _pathMap(item, path, key, object));
 		}
-		const item = object[current];
-		if (item !== undefined) {
-			if (!parts.length) {
-				return callback(item, current, object);
-			}
-			if (item instanceof Array) {
-				return fast.array.forEach(item, (item) => pathMap(item, parts.join("."), callback));
-			}
+		if (!path) {
+			return callback(object, current_key, origin || object);
 		}
-		object = item;
+		const parts = path.split(".");
+		let current;
+		while (current = parts.shift()) {
+			if (!object) {
+				return;
+			}
+			const item = object[current];
+			if (item !== undefined) {
+				if (Array.isArray(item)) {
+					return pathMap(item, parts.join("."), callback);
+				}
+				if (!parts.length) {
+					return callback(item, current_key || current, object);
+				}
+			}
+			object = item;
+		}
 	}
+
+	_pathMap(object, path, "", callback);
 }
 
 /**

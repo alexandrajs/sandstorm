@@ -124,7 +124,12 @@ function _save_set(model, resolve, reject) {
 			}
 			model._set = {};
 			model.data._id = doc._id;
-			resolve(doc._id);
+			model.orm.cache.delete(model.name, doc._id, (err) => {
+				if (err) {
+					return reject(err);
+				}
+				resolve(doc._id);
+			});
 		};
 		if (model.data._id) {
 			if (typeof model.data._id === "string" && !model.schema.properties.hasOwnProperty("_id")) {

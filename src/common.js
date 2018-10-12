@@ -177,7 +177,7 @@ function modelGet(target, schema, key, path, dry) {
 			if (schema.default !== undefined) {
 				return typeof schema.default === "function" ? schema.default() : schema.default;
 			}
-			throw new ExtError("ERR_MISSING_PROPERTY", "Missing property '" + path + "." + key + "'");
+			throw new ExtError("ERR_MISSING_PROPERTY", "Missing property '" + path + "'");
 		}
 		return;
 	}
@@ -193,7 +193,10 @@ function modelGet(target, schema, key, path, dry) {
 			}
 			const res = {};
 			Object.keys(schema.properties).map((okey) => {
-				res[okey] = modelGet(target[key], schema.properties[okey], okey, path + "." + okey, dry);
+				const value = modelGet(target[key], schema.properties[okey], okey, path + "." + okey, dry);
+				if (value !== null && value !== undefined) {
+					res[okey] = value;
+				}
 			});
 			return res;
 		}

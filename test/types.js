@@ -303,6 +303,57 @@ describe("types", () => {
 					});
 				});
 			});
+			describe("Object", () => {
+				[
+					{
+						schema: {
+							id: [
+								{
+									name: "String",
+									value: "String"
+								}
+							]
+						},
+						value: {
+							id: [
+								{
+									name: "String",
+									value: "String"
+								}
+							]
+						},
+						expected: {
+							id: [
+								{
+									name: "String",
+									value: "String"
+								}
+							]
+						},
+						name: "basic"
+					}
+				].forEach((test) => {
+					it(test.name, async () => {
+						const orm = new Orm();
+						orm.register("sub", {key: "String"});
+						orm.register("test", {key: test.schema});
+						const model = orm.create("test");
+						if ("value" in test) {
+							if (test.from_model) {
+								const sub = orm.create("sub");
+								await sub.set(test.value);
+								test.value = [sub];
+							}
+							await model.set({key: test.value});
+						}
+						if (test.is_model) {
+							assert.deepEqual(model.get().key[0].get(), test.expected || test.value);
+						} else {
+							assert.deepEqual(model.get().key, test.expected || test.value);
+						}
+					});
+				});
+			});
 			describe("String", () => {
 				[
 					{
@@ -351,7 +402,10 @@ describe("types", () => {
 					{
 						schema: {
 							type: "String",
-							oneOf: ["one", "of"]
+							oneOf: [
+								"one",
+								"of"
+							]
 						},
 						value: "one",
 						name: "with oneOf"
@@ -461,6 +515,18 @@ describe("types", () => {
 							done();
 						}
 					});
+				});
+			});
+			describe("Object", () => {
+				it('missing props', (done) => {
+					const orm = new Orm();
+					orm.register("test", {key: [{name:"String", value:"String"}]});
+					const model = orm.create("test");
+					model.set({key: [{name:"A"}]}).then(() => {
+						console.log();
+						assert(!('value' in model.get({dry:true}).key[0]));
+						done();
+					}).catch(done);
 				});
 			});
 			describe("Boolean", () => {
@@ -821,7 +887,10 @@ describe("types", () => {
 					{
 						schema: {
 							type: "String",
-							oneOf: ["one", "of"]
+							oneOf: [
+								"one",
+								"of"
+							]
 						},
 						value: "oneOf",
 						name: "with oneOf"

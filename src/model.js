@@ -397,7 +397,7 @@ function _hydrate(model, names) {
  * @private
  */
 function _hydrate_object(model, names, target, key, name, embedded, wait) {
-	if (!common.isPlainObject(embedded)) {
+	if (!common.isPlainObject(embedded) || !embedded._id) {
 		return;
 	}
 	wait.push(model.orm.get(name, embedded._id).then(_ => {

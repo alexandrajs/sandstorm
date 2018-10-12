@@ -117,7 +117,7 @@ function _save_set(model, resolve, reject) {
 		if (err) {
 			return reject(err);
 		}
-		const doc = _get(model);
+		const doc = _get(model, {dry: true});
 		const _save_set_cb = (err) => {
 			if (err) {
 				return reject(err);
@@ -158,7 +158,7 @@ function _save_merge(model, resolve, reject) {
 	}
 	const update = {
 		$set: common.objectToDotNotation(_get(model, {
-			dry: false,
+			dry: true,
 			key: "_set",
 			properties: Object.keys(model._set)
 		}))
@@ -235,13 +235,17 @@ function _get(model, options) {
 	fast.array.forEach(options.properties || Object.keys(model.schema.properties), (propertyKey) => {
 		const type = model.schema.properties[propertyKey].type;
 		if (type in types) {
-			const value = types[type].get(source, model.schema.properties[propertyKey], propertyKey);
+			const value = types[type].get(source, model.schema.properties[propertyKey], propertyKey, propertyKey, options.dry);
 			if (value !== null && value !== undefined) {
 				properties[propertyKey] = value;
 			}
 			return;
 		}
 		if (type in model.orm.schemas) {
+			if (options.dry && source[propertyKey] instanceof Model) {
+				properties[propertyKey] = source[propertyKey].get({dry: true});
+				return;
+			}
 			properties[propertyKey] = source[propertyKey];
 			return;
 		}
@@ -286,7 +290,7 @@ function _set(model, properties, merge) {
 			}
 			const type = model.schema.properties[targetKey].type;
 			if (type in types) {
-				return await.push(types[type].set(model, model.data, model._set, model.schema.properties[targetKey], targetKey, item));
+				return await.push(types[type].set(model, model.data, model._set, model.schema.properties[targetKey], targetKey, targetKey, item));
 			}
 			if (type in model.orm.schemas) {
 				if (common.isPlainObject(item)) {
@@ -397,8 +401,8 @@ function _hydrate_object(model, names, target, key, name, embedded, wait) {
 		return;
 	}
 	wait.push(model.orm.get(name, embedded._id).then(_ => {
-		_.hydrate(names);
 		target[key] = _;
+		return _.hydrate(names);
 	}));
 }
 
@@ -431,7 +435,7 @@ function _dehydrate(model, options) {
 function _dehydrate_model(model, key, target, embed) {
 	if (model instanceof Model) {
 		model.dehydrate();
-		const data = model.get();
+		const data = model.get({dry: true});
 		target[key] = _extractProperties(data, embed);
 		target[key]._id = data._id;
 	}

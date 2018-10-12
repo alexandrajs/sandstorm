@@ -15,10 +15,11 @@ const Promise = require("bluebird");
  * @param set
  * @param schema
  * @param {string} key
+ * @param path
  * @param {Object} value
  * @private
  */
-function _set(model, target, set, schema, key, value) {
+function _set(model, target, set, schema, key, path, value) {
 	if (!schema.properties || common.isEmpty(schema.properties)) {
 		target[key] = set[key] = fast.object.clone(value);
 		return Promise.resolve();
@@ -28,7 +29,7 @@ function _set(model, target, set, schema, key, value) {
 	const await = [];
 	fast.object.forEach(value, (item, target_key) => {
 		if (!schema.properties.hasOwnProperty(target_key)) {
-			return await.push(Promise.reject(new ExtError("ERR_KEY_NOT_ALLOWED", "Key '" + target_key + "' in '" + key + "' in not allowed ")));
+			return await.push(Promise.reject(new ExtError("ERR_KEY_NOT_ALLOWED", "Key '" + target_key + "' in '" + path + "' in not allowed ")));
 		}
 		const type = schema.properties[target_key].type;
 		const item_schema = schema.properties[target_key];
@@ -42,6 +43,7 @@ function _set(model, target, set, schema, key, value) {
 			item_schema,
 			type,
 			key,
+			path: path + "." + key,
 			value
 		}));
 	});
@@ -55,14 +57,15 @@ function _set(model, target, set, schema, key, value) {
  * @param set
  * @param schema
  * @param key
+ * @param path
  * @param value
  * @returns {*}
  */
-function set(model, target, set, schema, key, value) {
+function set(model, target, set, schema, key, path, value) {
 	if (!value || !common.isPlainObject(value)) {
 		return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be plain object"));
 	}
-	return _set(model, target, set, schema, key, value);
+	return _set(model, target, set, schema, key, path, value);
 }
 
 module.exports = {

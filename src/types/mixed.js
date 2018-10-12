@@ -13,10 +13,11 @@ const Promise = require("bluebird");
  * @param set
  * @param schema
  * @param key
+ * @param path
  * @param value
  * @private
  */
-function _set(model, target, set, schema, key, value) {
+function _set(model, target, set, schema, key, path, value) {
 	set[key] = target[key] = value;
 	return Promise.resolve();
 }
@@ -28,14 +29,15 @@ function _set(model, target, set, schema, key, value) {
  * @param set
  * @param schema
  * @param key
+ * @param path
  * @param value
  * @returns {*}
  */
-function set(model, target, set, schema, key, value) {
+function set(model, target, set, schema, key, path, value) {
 	if (value === null || value === undefined) {
 		return Promise.reject(new ExtError("ERR_PROPERTY_TYPE_CANT_BE_NULL_OR_UNDEFINED", "Value of '" + key + "' can not be null or undefined"));
 	}
-	return _set(model, target, set, schema, key, value);
+	return _set(model, target, set, schema, key, path, value);
 }
 
 module.exports = {

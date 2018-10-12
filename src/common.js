@@ -167,17 +167,39 @@ function _objectToDotNotation(object, result, path, options) {
  * @param target
  * @param schema
  * @param key
+ * @param path
+ * @param {boolean} dry
  * @returns {*}
  */
-function modelGet(target, schema, key) {
+function modelGet(target, schema, key, path, dry) {
 	if (target[key] === undefined) {
 		if (schema.required) {
 			if (schema.default !== undefined) {
 				return typeof schema.default === "function" ? schema.default() : schema.default;
 			}
-			throw new ExtError("ERR_MISSING_PROPERTY", "Missing property '" + key + "'");
+			throw new ExtError("ERR_MISSING_PROPERTY", "Missing property '" + path + "." + key + "'");
 		}
 		return;
+	}
+	if (dry) {
+		if (schema.type === "Array") {
+			return target[key].map((item, akey, array) => {
+				return modelGet(array, schema.item, akey, path + "." + akey, dry);
+			});
+		}
+		if (schema.type === "Object") {
+			if (!schema.properties) {
+				return target[key];
+			}
+			const res = {};
+			Object.keys(schema.properties).map((okey) => {
+				res[okey] = modelGet(target[key], schema.properties[okey], okey, path + "." + okey, dry);
+			});
+			return res;
+		}
+		if (target[key] instanceof Model) {
+			return target[key].get({dry: true});
+		}
 	}
 	return target[key];
 }
@@ -196,9 +218,9 @@ function modelGet(target, schema, key) {
  * @param {*} parameters.value
  */
 function setTargetItem(parameters) {
-	let {types, model, set, target, target_key, item, item_schema, type, key, value} = parameters;
+	let {types, model, set, target, target_key, item, item_schema, type, key, path, value} = parameters;
 	if (type in types) {
-		return types[type].set(model, target[key], set[key], item_schema, target_key, item);
+		return types[type].set(model, target[key], set[key], item_schema, target_key, path, item);
 	}
 	if (type in model.orm.schemas) {
 		let await = Promise.resolve();
@@ -226,7 +248,7 @@ function setTargetItem(parameters) {
 			}
 		}
 	}
-	return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + target_key + "' in '" + key + "' to be " + item_schema.type + ", got " + typeof value));
+	return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + target_key + "' in '" + path + "' to be " + item_schema.type + ", got " + typeof value));
 }
 
 module.exports = {

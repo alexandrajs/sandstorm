@@ -13,10 +13,11 @@ const Promise = require("bluebird");
  * @param set
  * @param schema
  * @param {string} key
+ * @param path
  * @param {number} value
  * @private
  */
-function _set(model, target, set, schema, key, value) {
+function _set(model, target, set, schema, key, path, value) {
 	if (schema.min !== undefined && value < schema.min) {
 		return Promise.reject(new ExtError("ERR_NUMBER_LOWER_THAN_ALLOWED", "Expected value of '" + key + "' to be greater than " + schema.min + ", got " + value));
 	}
@@ -34,10 +35,11 @@ function _set(model, target, set, schema, key, value) {
  * @param set
  * @param schema
  * @param key
+ * @param path
  * @param {number|*} value
  * @returns {*}
  */
-function set(model, target, set, schema, key, value) {
+function set(model, target, set, schema, key, path, value) {
 	if (typeof value === "string" && value.trim().length && schema.coerce) {
 		value = +value;
 	}
@@ -51,7 +53,7 @@ function set(model, target, set, schema, key, value) {
 			value = value.valueOf();
 		}
 	}
-	return _set(model, target, set, schema, key, value);
+	return _set(model, target, set, schema, key, path, value);
 }
 
 module.exports = {

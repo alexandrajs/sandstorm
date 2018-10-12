@@ -13,10 +13,11 @@ const Promise = require("bluebird");
  * @param set
  * @param schema
  * @param key
+ * @param path
  * @param value
  * @private
  */
-function _set(model, target, set, schema, key, value) {
+function _set(model, target, set, schema, key, path, value) {
 	set[key] = target[key] = value;
 	return Promise.resolve();
 }
@@ -28,17 +29,18 @@ function _set(model, target, set, schema, key, value) {
  * @param set
  * @param schema
  * @param key
+ * @param path
  * @param value
  * @returns {*}
  */
-function set(model, target, set, schema, key, value) {
+function set(model, target, set, schema, key, path, value) {
 	if (value !== true && value !== false) {
 		if (!(value instanceof Boolean)) {
 			return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be boolean, got " + typeof value));
 		}
 		value = value.valueOf();
 	}
-	return _set(model, target, set, schema, key, value);
+	return _set(model, target, set, schema, key, path, value);
 }
 
 module.exports = {

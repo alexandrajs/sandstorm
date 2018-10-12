@@ -320,5 +320,53 @@ describe("Model", () => {
 			await model.merge({embed: {name: "embed updated"}});
 			await model.save();
 		});
+		it("base set +", async function () {
+			const _embed = orm.create("Embed");
+			await _embed.set({
+				name: "embed",
+				value: "don't embed this"
+			});
+			await _embed.save();
+			const model = orm.create("Base");
+			await model.merge({
+				array: [
+					{
+						item: [
+							_embed,
+							_embed
+						]
+					}
+				],
+				object: {
+					array: [
+						_embed
+					],
+					embed: _embed
+				},
+				embed: _embed
+			});
+			await model.save();
+			let _doc = await _db.collection("Base").findOne({_id: new ObjectID(model.data._id)});
+			assert(_doc.array instanceof Array);
+			assert(_doc.array.length === 1);
+			assert(_doc.array[0].item.length === 2);
+			assert(_doc.array[0].item[0]._id instanceof ObjectID);
+			assert(_doc.array[0].item[0].name === "embed");
+			assert(_doc.array[0].item[1]._id instanceof ObjectID);
+			assert(_doc.array[0].item[1].name === "embed");
+			assert(_doc.object.array instanceof Array);
+			assert(_doc.object.array.length === 1);
+			assert(_doc.object.array[0]._id instanceof ObjectID);
+			assert(_doc.object.array[0].name === "embed");
+			assert(_doc.object.embed._id instanceof ObjectID);
+			assert(_doc.object.embed.name === "embed");
+			assert(_doc.embed._id instanceof ObjectID);
+			assert(_doc.embed.name === "embed");
+			const embed = await orm.get("Embed", _doc.object.array[0]._id);
+			await embed.merge({name: "updated"});
+			await embed.save();
+			await model.merge({embed: {name: "embed updated"}});
+			await model.save();
+		});
 	});
 });

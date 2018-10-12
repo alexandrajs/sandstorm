@@ -13,10 +13,11 @@ const Promise = require("bluebird");
  * @param set
  * @param schema
  * @param {string} key
+ * @param path
  * @param {string} value
  * @private
  */
-function _set(model, target, set, schema, key, value) {
+function _set(model, target, set, schema, key, path, value) {
 	const length = value.length;
 	if (schema.min && length < schema.min) {
 		return Promise.reject(new ExtError("ERR_STRING_TOO_SHORT", "Expected value of '" + key + "' to be longer than " + schema.min + ", got " + length));
@@ -41,10 +42,11 @@ function _set(model, target, set, schema, key, value) {
  * @param set
  * @param schema
  * @param key
+ * @param path
  * @param value
  * @returns {*}
  */
-function set(model, target, set, schema, key, value) {
+function set(model, target, set, schema, key, path, value) {
 	if (typeof value !== "string") {
 		if (!(value instanceof String)) {
 			return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be 'string', got " + typeof value));
@@ -52,7 +54,7 @@ function set(model, target, set, schema, key, value) {
 			value = value.valueOf();
 		}
 	}
-	return _set(model, target, set, schema, key, value);
+	return _set(model, target, set, schema, key, path, value);
 }
 
 module.exports = {

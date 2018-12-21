@@ -68,8 +68,7 @@ describe("Sandstorm", () => {
 					delete result._id;
 					assert.deepStrictEqual(result, {
 						key: "key" + a,
-						value: "value" + a,
-						sub: null
+						value: "value" + a
 					});
 				});
 				done();
@@ -125,11 +124,20 @@ describe("Sandstorm", () => {
 				key: "String",
 				value: "String"
 			});
+			orm.Schema.register("StringId", {
+				_id: "String",
+				value: "String"
+			});
 			Promise.all((new Array(10)).fill(0).map((_, idx) => {
 				return orm.create("Get").set({key: "" + idx}).then((model) => {
 					return model.save().then(idx => idxs.push(idx));
 				});
 			})).then(() => {
+				return orm.create("StringId").set({
+					_id: "ID",
+					value: "VALUE"
+				}).then(model => model.save());
+			}).then(() => {
 				done();
 			}).catch(done);
 		});
@@ -142,6 +150,16 @@ describe("Sandstorm", () => {
 		it("not existing", (done) => {
 			orm.get("Get", fake_idxs).then((docs) => {
 				docs.forEach(doc => assert(doc === null));
+				done();
+			}).catch(done);
+		});
+		it("existing StringId", (done) => {
+			orm.get("StringId", "ID").then((doc) => {
+				console.log(doc);
+				assert.deepStrictEqual(doc.get(), {
+					_id: "ID",
+					value: "VALUE"
+				});
 				done();
 			}).catch(done);
 		});

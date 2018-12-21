@@ -246,7 +246,9 @@ function _get(model, options) {
 				properties[propertyKey] = source[propertyKey].get({dry: true});
 				return;
 			}
-			properties[propertyKey] = source[propertyKey];
+			if (source[propertyKey] !== null && source[propertyKey] !== undefined) {
+				properties[propertyKey] = source[propertyKey];
+			}
 			return;
 		}
 		throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + propertyKey + "' to be one of base types or model, got " + type);
@@ -401,6 +403,9 @@ function _hydrate_object(model, names, target, key, name, embedded, wait) {
 		return;
 	}
 	wait.push(model.orm.get(name, embedded._id).then(_ => {
+		if (!_) {
+			return;
+		}
 		target[key] = _;
 		return _.hydrate(names);
 	}));

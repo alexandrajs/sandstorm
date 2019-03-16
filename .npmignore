@@ -1,10 +1,7 @@
-.vscode/
-.idea/
-node_modules/
-.gitignore
-doc/
-coverage/
-test/
+.*
 bench/
-.gitattributes
-.travis.yml
+doc/
+codeclimate.html
+coverage/
+node_modules/
+test/

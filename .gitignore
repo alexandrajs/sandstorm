@@ -6,3 +6,5 @@ doc/
 build/
 coverage/
 npm-debug.log
+.nyc_output
+codeclimate.html

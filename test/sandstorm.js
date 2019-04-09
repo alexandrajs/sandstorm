@@ -185,4 +185,12 @@ describe("Sandstorm", () => {
 			});
 		});
 	});
+	describe("autoincrement", () => {
+		it("basic", async () => {
+			assert.strictEqual(await orm.autoincrement("T1"), 1);
+			assert.strictEqual(await orm.autoincrement("T2"), 1);
+			assert.strictEqual(await orm.autoincrement("T2"), 2);
+			assert.strictEqual(await orm.autoincrement("T1"), 2);
+		});
+	});
 });

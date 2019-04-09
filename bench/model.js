@@ -38,7 +38,7 @@ const model = orm.create("Name");
 function nop() {
 }
 
-orm.connect("mongodb://localhost/sandstorm_bench").then(() => {
+orm.connect("mongodb://root:root@localhost/admin").then(() => {
 	return orm.use("sandstorm_bench");
 }).then(() => {
 	model.set({
@@ -57,20 +57,27 @@ orm.connect("mongodb://localhost/sandstorm_bench").then(() => {
 }).then((_id) => {
 	suite.add("nop", function () {
 		nop();
-	}).add("set", function () {
-		model.set({
-			active: true,
-			login: "String",
-			password: "af",
-			type: 1,
-			account: {
-				type: "typ",
-				expires: new Date(),
-				options: {prop: "test"}
-			},
-			history: []
-		});
+	}).add("set", {
+		defer: true,
+		fn: function (deferred) {
+			model.set({
+				active: true,
+				login: "String",
+				password: "af",
+				type: 1,
+				account: {
+					type: "typ",
+					expires: new Date(),
+					options: {prop: "test"}
+				},
+				history: []
+			}).then(() => deferred.resolve()).catch(() => {
+				console.error(e);
+				process.exit();
+			});
+		}
 	}).add("set + save", {
+		defer: true,
 		fn: function (deferred) {
 			model.set({
 				active: true,
@@ -91,8 +98,7 @@ orm.connect("mongodb://localhost/sandstorm_bench").then(() => {
 				console.error(e);
 				process.exit();
 			});
-		},
-		"defer": true
+		}
 	}).add("get", function () {
 		model.get();
 	}).add("orm.get", {
@@ -110,7 +116,7 @@ orm.connect("mongodb://localhost/sandstorm_bench").then(() => {
 	}).on("cycle", function (event) {
 		console.log(String(event.target));
 	}).on("complete", function () {
-		console.log(orm.disconnect());
+		orm.disconnect();
 	}).run({"async": true});
 }).catch(console.log);
 

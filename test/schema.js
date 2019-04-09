@@ -24,7 +24,7 @@ describe("Schema", () => {
 					}
 				}
 			});
-			orm.connect("mongodb://localhost/sandstorm_test_schema_options").then(() => {
+			orm.connect("mongodb://root:root@localhost/admin").then(() => {
 				return orm.use("sandstorm_test_schema_options");
 			}).then((db) => {
 				return db.collection("Sub");

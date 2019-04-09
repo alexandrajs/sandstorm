@@ -10,6 +10,7 @@ before_script:
   - sudo service mongod start
   - sleep 15
   - mongo admin --eval 'db.adminCommand( { setFeatureCompatibilityVersion:"3.6" } )'
+  - mongo mydb_test --eval 'db.createUser({user:"root",pwd:"root",roles:["dbAdmin"]});'
 services:
   - redis-server
 node_js:

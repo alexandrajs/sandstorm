@@ -196,6 +196,12 @@ Sandstorm.prototype.get = function (name, ids, options) {
 	}
 	return Promise.all(wait);
 };
+Sandstorm.prototype.autoincrement = function (name) {
+	return this.db.collection("_autoincrement").findOneAndUpdate({_id: name}, {$inc: {value: 1}}, {
+		upsert: true,
+		returnOriginal: false
+	}).then((result) => result.value.value);
+};
 /**
  * @see Schema.register
  * @param {string} name

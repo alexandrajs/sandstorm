@@ -160,7 +160,7 @@ Sandstorm.prototype.aggregate = function (name, pipeline, options) {
 /**
  * Get one or more models
  * @param {string} name
- * @param {String|String[]} ids
+ * @param {String|String[]|ObjectID|ObjectID[]} ids
  * @param {Object} [options]
  * @returns {Promise}
  */

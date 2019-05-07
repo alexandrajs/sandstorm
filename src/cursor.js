@@ -64,17 +64,75 @@ Cursor.prototype.toArray = function (options) {
 Cursor.prototype.stream = function (options) {
 	// TODO: implement
 };
-/* istanbul ignore next */
-Cursor.prototype.map = function () {
-	// TODO: implement
+/**
+ *
+ * @param {Function} callback
+ * @param {Object} options
+ * @returns {Promise<Array>}
+ */
+Cursor.prototype.map = async function (callback, options) {
+	this.setOptions(options);
+	const result = [];
+	let model;
+	do {
+		model = await this.next();
+		if (model) {
+			result.push(await callback(model));
+		}
+	} while (model);
+	return result;
 };
-/* istanbul ignore next */
-Cursor.prototype.filter = function () {
-	// TODO: implement
+/**
+ *
+ * @param {Function} callback
+ * @param {Object} options
+ * @returns {Promise<Array>}
+ */
+Cursor.prototype.filter = async function (callback, options) {
+	this.setOptions(options);
+	const result = [];
+	let model;
+	do {
+		model = await this.next();
+		if (model) {
+			if (await callback(model)) {
+				result.push(model);
+			}
+		}
+	} while (model);
+	return result;
 };
-/* istanbul ignore next */
-Cursor.prototype.forEach = function () {
-	// TODO: implement
+/**
+ *
+ * @param {Function} callback
+ * @param {Object} options
+ * @returns {Promise<void>}
+ */
+Cursor.prototype.forEach = async function (callback, options) {
+	this.setOptions(options);
+	let model;
+	do {
+		model = await this.next();
+		if (model) {
+			await callback(model);
+		}
+	} while (model);
+};
+/**
+ *
+ * @returns {Promise<Object|Model>}
+ */
+Cursor.prototype.next = function () {
+	return this.cursor.next().then((doc) => {
+		if (!doc || this.options.raw && (!this.options.hydrate || !this.options.hydrate.length)) {
+			return doc;
+		}
+		const model = common.docToModel(this.orm, this.name, doc);
+		if (this.options.hydrate && this.options.hydrate.length) {
+			return model.hydrate(this.options.hydrate);
+		}
+		return model;
+	});
 };
 /**
  *

@@ -270,7 +270,7 @@ function _set(model, properties, merge) {
 		model.data = {_id: model.data._id};
 	}
 	return model.hydrate().then(() => {
-		const await = [];
+		const _await = [];
 		fast.object.forEach(properties, (item, targetKey) => {
 			if (targetKey === "_id" && !model.schema.properties.hasOwnProperty("_id")) {
 				if (model.data._id) {
@@ -292,7 +292,7 @@ function _set(model, properties, merge) {
 			}
 			const type = model.schema.properties[targetKey].type;
 			if (type in types) {
-				return await.push(types[type].set(model, model.data, model._set, model.schema.properties[targetKey], targetKey, targetKey, item));
+				return _await.push(types[type].set(model, model.data, model._set, model.schema.properties[targetKey], targetKey, targetKey, item));
 			}
 			if (type in model.orm.schemas) {
 				if (common.isPlainObject(item)) {
@@ -300,13 +300,13 @@ function _set(model, properties, merge) {
 					const _id = data._id;
 					delete data._id;
 					if (_id) {
-						return await.push(model.orm.get(type, _id).then(nested => {
+						return _await.push(model.orm.get(type, _id).then(nested => {
 							model.data[targetKey] = model._set[targetKey] = nested;
 							return nested.merge(data);
 						}));
 					} else {
 						item = new Model(model.orm, type);
-						await.push(item.set(data));
+						_await.push(item.set(data));
 					}
 				}
 				if (item instanceof Model) {
@@ -319,7 +319,7 @@ function _set(model, properties, merge) {
 			}
 			throw new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + targetKey + "' to be one of base types or model, got '" + typeof item + "'");
 		});
-		return Promise.all(await).then(() => model);
+		return Promise.all(_await).then(() => model);
 	});
 }
 

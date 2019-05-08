@@ -120,7 +120,7 @@ Cursor.prototype.forEach = async function (callback, options) {
 };
 /**
  *
- * @returns {Promise<Object|Model>}
+ * @returns {Promise<Object|Model|null>}
  */
 Cursor.prototype.next = function () {
 	return this.cursor.next().then((doc) => {

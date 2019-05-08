@@ -155,7 +155,6 @@ describe("Sandstorm", () => {
 		});
 		it("existing StringId", (done) => {
 			orm.get("StringId", "ID").then((doc) => {
-				console.log(doc);
 				assert.deepStrictEqual(doc.get(), {
 					_id: "ID",
 					value: "VALUE"

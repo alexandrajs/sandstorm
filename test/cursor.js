@@ -174,7 +174,7 @@ describe("Cursor", () => {
 	});
 	describe("map", () => {
 		it("limit", async () => {
-			const cursor = orm.find("Base", {}).sort({"array.name": -1}).limit(2);
+			const cursor = orm.find("Base", {}).sort({"array.name": -1}).limit(2).hydrate(["Sub"]);
 			assert.deepStrictEqual(await cursor.map(async (m) => m.get().id), [
 				9,
 				8
@@ -184,8 +184,9 @@ describe("Cursor", () => {
 	});
 	describe("next", () => {
 		it("limit + hydrate", async () => {
-			const cursor = orm.find("Base", {}).limit(2).hydrate(["Sub"]);
+			const cursor = orm.find("Base", {}).limit(2);
 			assert.notStrictEqual(await cursor.next(), null);
+			cursor.setOptions({raw: true});
 			assert.notStrictEqual(await cursor.next(), null);
 			assert.strictEqual(await cursor.next(), null);
 		});

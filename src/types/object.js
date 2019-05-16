@@ -26,14 +26,14 @@ function _set(model, target, set, schema, key, path, value) {
 	}
 	set[key] = {};
 	target[key] = {};
-	const await = [];
+	const _await = [];
 	fast.object.forEach(value, (item, target_key) => {
 		if (!schema.properties.hasOwnProperty(target_key)) {
-			return await.push(Promise.reject(new ExtError("ERR_KEY_NOT_ALLOWED", "Key '" + target_key + "' in '" + path + "' in not allowed ")));
+			return _await.push(Promise.reject(new ExtError("ERR_KEY_NOT_ALLOWED", "Key '" + target_key + "' in '" + path + "' in not allowed ")));
 		}
 		const type = schema.properties[target_key].type;
 		const item_schema = schema.properties[target_key];
-		await.push(common.setTargetItem({
+		_await.push(common.setTargetItem({
 			types,
 			model,
 			set,
@@ -47,7 +47,7 @@ function _set(model, target, set, schema, key, path, value) {
 			value
 		}));
 	});
-	return Promise.all(await);
+	return Promise.all(_await);
 }
 
 /**

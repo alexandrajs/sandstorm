@@ -1,3 +1,7 @@
+parser: babel-eslint
+
+ecmaVersion: 2018
+
 ecmaFeatures:
   modules: true
   jsx: false

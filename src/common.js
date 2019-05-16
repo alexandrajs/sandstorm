@@ -226,7 +226,7 @@ function setTargetItem(parameters) {
 		return types[type].set(model, target[key], set[key], item_schema, target_key, path, item);
 	}
 	if (type in model.orm.schemas) {
-		let await = Promise.resolve();
+		let _await = Promise.resolve();
 		if (typeof item === "string") {
 			item = {_id: item};
 		}
@@ -241,13 +241,13 @@ function setTargetItem(parameters) {
 				});
 			} else {
 				item = new Model(model.orm, type);
-				await = item.set(data);
+				_await = item.set(data);
 			}
 		}
 		if (item instanceof Model) {
 			if (item.name === type) {
 				target[key][target_key] = set[key][target_key] = item;
-				return await;
+				return _await;
 			}
 		}
 	}

@@ -1,6 +1,6 @@
 {
   "name": "sandstorm",
-  "version": "0.3.18",
+  "version": "0.3.19",
   "description": "Not a MongoDB ORM",
   "main": "./index.js",
   "scripts": {
@@ -35,8 +35,7 @@
     "amule-aim": "^0.5.4",
     "amule-more": "^0.2.2",
     "amule-rush": "^0.3.6",
-    "exterror": "^1.2.2",
-    "run-parallel": "^1.1.9"
+    "exterror": "^1.2.2"
   },
   "devDependencies": {
     "benchmark": "^2.1.4",

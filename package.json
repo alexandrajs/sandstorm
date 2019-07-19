@@ -36,7 +36,6 @@
     "amule-more": "^0.2.2",
     "amule-rush": "^0.3.6",
     "exterror": "^1.2.2",
-    "fast.js": "^0.1.1",
     "run-parallel": "^1.1.9"
   },
   "devDependencies": {

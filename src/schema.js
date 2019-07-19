@@ -2,7 +2,6 @@
  * @author Michał Żaloudik <ponury.kostek@gmail.com>
  */
 "use strict";
-const fast = require("fast.js");
 const types = require("./types");
 const common = require("./common");
 const {
@@ -18,7 +17,7 @@ const ExtError = require("exterror");
  * @constructor
  */
 function Schema(orm, options) {
-	this.options = fast.assign({}, options || {});
+	this.options = Object.assign({}, options || {});
 	this.orm = orm;
 }
 
@@ -27,7 +26,7 @@ function Schema(orm, options) {
  * @param {Object} schemas
  */
 Schema.prototype.import = function (schemas) {
-	fast.assign(this.orm.schemas, schemas);
+	Object.assign(this.orm.schemas, schemas);
 };
 /**
  * Export registered blueprints
@@ -89,7 +88,7 @@ Schema.sort = function (blueprints) {
 
 	function parse_obj(object) {
 		const dependencies = [];
-		fast.forEach(object, (property, key) => {
+		Object.entries(object).forEach(([key, property]) => {
 			if (key[0] === "$") {
 				return;
 			}
@@ -99,7 +98,7 @@ Schema.sort = function (blueprints) {
 				}
 			} else if (property !== null && typeof property === "object") {
 				const inner_dependencies = parse_obj(property);
-				fast.array.forEach(inner_dependencies, (index) => {
+				inner_dependencies.forEach((index) => {
 					common.pushUnique(dependencies, index);
 				});
 			}
@@ -111,7 +110,7 @@ Schema.sort = function (blueprints) {
 		return parse_obj(blueprint);
 	}
 
-	fast.array.forEach(names, (name) => {
+	names.forEach((name) => {
 		dependencies[name] = get_dependencies(blueprints[name]);
 	});
 	const list = [];
@@ -135,7 +134,7 @@ Schema.sort = function (blueprints) {
 		}
 	}
 	const sorted = {};
-	fast.array.forEach(list, (name) => {
+	list.forEach((name) => {
 		sorted[name] = blueprints[name];
 	});
 	return sorted;
@@ -151,7 +150,7 @@ Schema.sort = function (blueprints) {
  */
 function _parse(object, path, schema, orm) {
 	const output = {};
-	fast.object.forEach(object, (value, key) => {
+	Object.entries(object).forEach(([key, value]) => {
 		path.push(key);
 		const property = _parseProperty(value, path, schema, orm);
 		output[key] = _expandProperty(property, path, schema, orm);
@@ -191,7 +190,7 @@ function _expandProperty(property, path, schema, orm) {
 			if (property.type in orm.schemas) {
 				_addSchemaDependency(schema, path, property.type, orm, property.options.embed);
 				_addSchemaDependent(schema, path, property.type, orm, property.options.embed);
-				return new ModelProperty(fast.object.assign({}, property.options, {type: property.type}), path, schema);
+				return new ModelProperty(Object.assign({}, property.options, {type: property.type}), path, schema);
 			}
 	}
 	throw new ExtError("ERR_UNSUPPORTED_SCHEMA_PROPERTY_TYPE", "Unsupported property type '" + property.type + "'");
@@ -294,7 +293,7 @@ function _addSchemaDependency(schema, path, name, orm, embed) {
 	if (!(name in schema.dependencies)) {
 		schema.dependencies[name] = {};
 	}
-	fast.object.assign(schema.dependencies[name], {[path_str]: embed || []});
+	Object.assign(schema.dependencies[name], {[path_str]: embed || []});
 }
 
 /**
@@ -311,7 +310,7 @@ function _addSchemaDependent(schema, path, name, orm, embed) {
 	if (!(schema.type in target.dependents)) {
 		target.dependents[schema.type] = {};
 	}
-	fast.object.assign(target.dependents[schema.type], {[path_str]: embed || []});
+	Object.assign(target.dependents[schema.type], {[path_str]: embed || []});
 }
 
 function _setUniqueIndexOption(schema, property, path) {

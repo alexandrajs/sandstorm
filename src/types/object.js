@@ -3,7 +3,6 @@
  */
 "use strict";
 const types = require("./index");
-const fast = require("fast.js");
 const common = require("../common");
 const ExtError = require("exterror");
 
@@ -20,13 +19,13 @@ const ExtError = require("exterror");
  */
 function _set(model, target, set, schema, key, path, value) {
 	if (!schema.properties || common.isEmpty(schema.properties)) {
-		target[key] = set[key] = fast.object.clone(value);
+		target[key] = set[key] = Object.assign({}, value);
 		return Promise.resolve();
 	}
 	set[key] = {};
 	target[key] = {};
 	const _await = [];
-	fast.object.forEach(value, (item, target_key) => {
+	Object.entries(value).forEach(([target_key, item]) => {
 		if (!schema.properties.hasOwnProperty(target_key)) {
 			return _await.push(Promise.reject(new ExtError("ERR_KEY_NOT_ALLOWED", "Key '" + target_key + "' in '" + path + "' in not allowed ")));
 		}

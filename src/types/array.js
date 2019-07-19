@@ -3,7 +3,6 @@
  */
 "use strict";
 const types = require("./index");
-const fast = require("fast.js");
 const common = require("../common");
 const ExtError = require("exterror");
 
@@ -28,12 +27,12 @@ function _set(model, target, set, schema, key, path, value) {
 	}
 	const type = schema.item.type;
 	if (type === "Mixed") {
-		set[key] = target[key] = fast.cloneArray(value);
+		set[key] = target[key] = value.slice();
 		return Promise.resolve();
 	}
 	set[key] = [];
 	target[key] = [];
-	return Promise.all(fast.array.map(value, (item, target_key) => {
+	return Promise.all(value.map((item, target_key) => {
 		return common.setTargetItem({
 			types,
 			model,

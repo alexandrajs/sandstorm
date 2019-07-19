@@ -2,7 +2,6 @@
  * @author Michał Żaloudik <ponury.kostek@gmail.com>
  */
 "use strict";
-const fast = require("fast.js");
 const ExtError = require("exterror");
 const {ObjectID} = require("mongodb");
 
@@ -90,7 +89,7 @@ function pathMap(object, path, callback) {
 
 	function _pathMap(object, path, current_key, origin) {
 		if (Array.isArray(object)) {
-			return fast.array.map(object, (item, key) => _pathMap(item, path, key, object));
+			return object.map((item, key) => _pathMap(item, path, key, object));
 		}
 		if (!path) {
 			return callback(object, current_key, origin || object);
@@ -123,7 +122,7 @@ function pathMap(object, path, callback) {
  * @param item
  */
 function pushUnique(array, item) {
-	if (!~fast.array.indexOf(array, item)) {
+	if (!~array.indexOf(item)) {
 		array.push(item);
 	}
 }
@@ -135,7 +134,7 @@ function pushUnique(array, item) {
  * @returns {Object}
  */
 function objectToDotNotation(object, options) {
-	options = fast.assign({arrays: false}, options || {});
+	options = Object.assign({arrays: false}, options || {});
 	const result = {};
 	_objectToDotNotation(object, result, [], options);
 	return result;
@@ -150,7 +149,7 @@ function objectToDotNotation(object, options) {
  * @private
  */
 function _objectToDotNotation(object, result, path, options) {
-	fast.object.forEach(object, (value, key) => {
+	Object.entries(object).forEach(([key, value]) => {
 		path.push(key);
 		if (isPlainObject(value)) {
 			_objectToDotNotation(value, result, path, options);
@@ -230,7 +229,7 @@ function setTargetItem(parameters) {
 			item = {_id: item};
 		}
 		if (isPlainObject(item)) {
-			const data = fast.assign({}, item);
+			const data = Object.assign({}, item);
 			const _id = data._id;
 			delete data._id;
 			if (_id) {

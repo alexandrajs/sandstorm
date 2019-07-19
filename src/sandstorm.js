@@ -2,7 +2,6 @@
  * @author Michał Żaloudik <ponury.kostek@gmail.com>
  */
 "use strict";
-const fast = require("fast.js");
 const Model = require("./model");
 const Schema = require("./schema");
 const Cursor = require("./cursor");
@@ -31,7 +30,7 @@ function Sandstorm(options) {
 			l2: {enforceObjectID: false}
 		}
 	};
-	fast.assign(this.options, options || {});
+	Object.assign(this.options, options || {});
 	/**
 	 * @type {Object}
 	 */
@@ -123,7 +122,7 @@ Sandstorm.prototype.create = function (name, data) {
  * @returns {Cursor}
  */
 Sandstorm.prototype.find = function (name, query, options) {
-	return new Cursor(this.db.collection(name).find(query, fast.assign({}, this.schemas[name].options || {}, options || {})), this, name, this.schemas[name].options);
+	return new Cursor(this.db.collection(name).find(query, Object.assign({}, this.schemas[name].options || {}, options || {})), this, name, this.schemas[name].options);
 };
 /**
  * Find one document
@@ -164,7 +163,7 @@ Sandstorm.prototype.aggregate = function (name, pipeline, options) {
  * @returns {Promise}
  */
 Sandstorm.prototype.get = function (name, ids, options) {
-	options = fast.assign({swallowErrors: false}, options || {});
+	options = Object.assign({swallowErrors: false}, options || {});
 	if (this.db === null) {
 		return Promise.reject(new ExtError("ERR_ORM_NOT_CONNECTED", "Not connected"));
 	}
@@ -227,9 +226,9 @@ function _init_cache(orm, name) {
 		return __caches[cache_name];
 	}
 	const mule = new AMule();
-	const aim = new Aim(fast.assign({cache: false}, orm.options.cache.l0 || {}));
-	const rush = new Rush(fast.assign({prefix: name + "_"}, orm.options.cache.l1 || {}));
-	const more = new More(orm.db, fast.assign({}, orm.options.cache.l2 || {}));
+	const aim = new Aim(Object.assign({cache: false}, orm.options.cache.l0 || {}));
+	const rush = new Rush(Object.assign({prefix: name + "_"}, orm.options.cache.l1 || {}));
+	const more = new More(orm.db, Object.assign({}, orm.options.cache.l2 || {}));
 	mule.use(aim);
 	mule.use(rush);
 	mule.use(more);
@@ -246,22 +245,22 @@ function _init_cache(orm, name) {
  */
 function _ensure_indexes(db, schemas) {
 	const wait = [];
-	fast.object.forEach(schemas, (schema, name) => {
+	Object.entries(schemas).forEach(([name, schema]) => {
 		const indexes = schema.options.indexes;
 		indexes && wait.push(new Promise((resolve, reject) => {
 			db.collection(name, (err, collection) => {
 				if (err) {
 					return reject(err);
 				}
-				resolve(Promise.all(fast.array.map(indexes, (index) => {
+				resolve(Promise.all(indexes.map((index) => {
 					if (!common.isPlainObject(index)) {
 						return Promise.reject(new ExtError("ERR_COLLECTION_INDEX_MUST_BE_OBJECT", "Collection index must be plain object"));
 					}
 					if (typeof index.fieldOrSpec !== "string" && !common.isPlainObject(index.fieldOrSpec)) {
 						return Promise.reject(new ExtError("ERR_COLLECTION_INDEX_FIELD_OR_SPEC_MUST_BE_OBJECT_OR_STRING", "Collection index.fieldOrSpec must be plain object or string"));
 					}
-					const options = fast.assign({}, index.options || {});
-					const collation = fast.object.clone(schema.options.collation || {});
+					const options = Object.assign({}, index.options || {});
+					const collation = Object.assign({}, schema.options.collation || {});
 					if (!common.isEmpty(collation) && !options.collation) {
 						options.collation = collation;
 					}

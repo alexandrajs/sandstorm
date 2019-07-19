@@ -3,7 +3,6 @@
  */
 "use strict";
 const common = require("./common");
-const fast = require("fast.js");
 const ExtError = require("exterror");
 
 /**
@@ -33,7 +32,7 @@ function Cursor(cursor, orm, name, options) {
  * @param {Object} options
  */
 Cursor.prototype.setOptions = function (options) {
-	fast.assign(this.options, options || {});
+	Object.assign(this.options, options || {});
 };
 /**
  *

@@ -3,7 +3,6 @@
  */
 "use strict";
 const ExtError = require("exterror");
-const Promise = require("bluebird");
 const fast = require("fast.js");
 const ObjectID = require("mongodb").ObjectID;
 

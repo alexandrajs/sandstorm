@@ -35,7 +35,6 @@
     "amule-aim": "^0.5.4",
     "amule-more": "^0.2.2",
     "amule-rush": "^0.3.6",
-    "bluebird": "^3.5.4",
     "exterror": "^1.2.2",
     "fast.js": "^0.1.1",
     "run-parallel": "^1.1.9"

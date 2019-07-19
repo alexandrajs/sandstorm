@@ -4,7 +4,6 @@
 "use strict";
 const common = require("./common");
 const fast = require("fast.js");
-const Promise = require("bluebird");
 const ExtError = require("exterror");
 
 /**

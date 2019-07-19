@@ -12,7 +12,6 @@ const AMule = require("amule");
 const Aim = require("amule-aim");
 const Rush = require("amule-rush");
 const More = require("amule-more");
-const Promise = require("bluebird");
 const ExtError = require("exterror");
 
 /**
@@ -88,7 +87,7 @@ Sandstorm.prototype.connect = function (connectionString) {
 Sandstorm.prototype.use = function (dbName) {
 	this.db = this.client.db(dbName);
 	this.cache = _init_cache(this, dbName);
-	return _ensure_indexes(this.db, this.schemas);
+	return _ensure_indexes(this.db, this.schemas).catch(error => (console.error(error), this.db));
 };
 /**
  * Disconnects from server
@@ -266,7 +265,10 @@ function _ensure_indexes(db, schemas) {
 					if (!common.isEmpty(collation) && !options.collation) {
 						options.collation = collation;
 					}
-					return collection.createIndex(index.fieldOrSpec, common.isEmpty(options) ? undefined : options);
+					return collection.createIndex(index.fieldOrSpec, common.isEmpty(options) ? undefined : options).catch(error => {
+						// TODO check if it's doubled index name, if so, drop old index and try again
+						throw new ExtError("ERR_MONGODB_INTERNAL_ERROR", error.message);
+					});
 				})));
 			});
 		}));

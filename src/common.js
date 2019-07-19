@@ -4,7 +4,6 @@
 "use strict";
 const fast = require("fast.js");
 const ExtError = require("exterror");
-const Promise = require("bluebird");
 const {ObjectID} = require("mongodb");
 
 /**

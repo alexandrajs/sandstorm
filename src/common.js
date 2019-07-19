@@ -186,7 +186,8 @@ function modelGet(target, schema, key, path, dry) {
 			});
 		}
 		if (schema.type === "Object") {
-			if (!schema.properties) {
+			// TODO investigate why sometimes `schema.properties` is {} and sometimes undefined
+			if (!schema.properties || isEmpty(schema.properties)) {
 				return target[key];
 			}
 			const res = {};

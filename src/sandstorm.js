@@ -86,7 +86,14 @@ Sandstorm.prototype.connect = function (connectionString) {
 Sandstorm.prototype.use = function (dbName) {
 	this.db = this.client.db(dbName);
 	this.cache = _init_cache(this, dbName);
-	return _ensure_indexes(this.db, this.schemas).catch(error => (console.error(error), this.db));
+	return this.ensureIndexes().catch(error => (console.error(error), this.db));
+};
+/**
+ *
+ * @returns {Promise<Db>}
+ */
+Sandstorm.prototype.ensureIndexes = function () {
+	return _ensure_indexes(this.db, this.schemas);
 };
 /**
  * Disconnects from server

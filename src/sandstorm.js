@@ -258,12 +258,13 @@ function _init_cache(orm, name) {
 		return __caches[cache_name];
 	}
 	const mule = new AMule();
-	const aim = new Aim(Object.assign({cache: false}, orm.options.cache.l0 || {}));
-	const rush = new Rush(Object.assign({prefix: name + "_"}, orm.options.cache.l1 || {}));
-	const more = new More(orm.db, Object.assign({}, orm.options.cache.l2 || {}));
-	mule.use(aim);
-	mule.use(rush);
-	mule.use(more);
+	if (orm.options.cache.l0 !== false) {
+		mule.use(new Aim(Object.assign({cache: false}, orm.options.cache.l0 || {})));
+	}
+	if (orm.options.cache.l1 !== false) {
+		mule.use(new Rush(Object.assign({prefix: name + "_"}, orm.options.cache.l1 || {})));
+	}
+	mule.use(new More(orm.db, Object.assign({}, orm.options.cache.l2 || {})));
 	__caches[cache_name] = mule;
 	return mule;
 }

@@ -140,13 +140,38 @@ Sandstorm.prototype.find = function (name, query, options) {
  */
 Sandstorm.prototype.findOne = function (name, query, options) {
 	options = options || {};
-	return this.db.collection(name).findOne(query, options).then((doc) => {
+	const {hydrate, ...query_options} = options;
+	return this.db.collection(name).findOne(query, query_options).then((doc) => {
 		if (!doc) {
 			return doc;
 		}
 		const model = common.docToModel(this, name, doc);
-		if (options.hydrate && options.hydrate.length) {
-			return model.hydrate(options.hydrate);
+		if (hydrate && hydrate.length) {
+			return model.hydrate(hydrate);
+		}
+		return model;
+	});
+};
+/**
+ * Find one and update document
+ * @param name
+ * @param filter
+ * @param update
+ * @param [options]
+ * @returns {Promise}
+ * @todo validate `update`
+ */
+Sandstorm.prototype.findOneAndUpdate = function (name, filter, update, options) {
+	options = options || {};
+	const {hydrate, ...query_options} = options;
+	query_options.returnOriginal = false;
+	return this.db.collection(name).findOneAndUpdate(filter, update, query_options).then(({value: doc}) => {
+		if (!doc) {
+			return doc;
+		}
+		const model = common.docToModel(this, name, doc);
+		if (hydrate && hydrate.length) {
+			return model.hydrate(hydrate);
 		}
 		return model;
 	});

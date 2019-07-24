@@ -116,6 +116,85 @@ describe("Sandstorm", () => {
 			}).catch(done);
 		});
 	});
+	describe("findOneAndUpdate", () => {
+		before(() => {
+			//orm.register("Sub", {name: "String"});
+			orm.Schema.register("FindOneAndUpdate", {
+				key: "String",
+				value: "String",
+				sub: "Sub"
+			});
+		});
+		it("existing", (done) => {
+			const num = 10;
+			const wait = [];
+			for (let a = 0; a < num; a++) {
+				const model = orm.create("FindOneAndUpdate");
+				wait.push(model.set({
+					key: "key" + a,
+					value: "value" + a
+				}).then((model) => model.save()));
+			}
+			Promise.all(wait).then(() => {
+				const wait = [];
+				for (let a = 0; a < num; a++) {
+					wait.push(orm.findOneAndUpdate("FindOneAndUpdate", {key: "key" + a}, {$set: {value: "value" + (a + 2)}}));
+				}
+				return Promise.all(wait);
+			}).then((results) => {
+				results.forEach((model, a) => {
+					const result = model.get();
+					delete result._id;
+					assert.deepStrictEqual(result, {
+						key: "key" + a,
+						value: "value" + (a + 2)
+					});
+				});
+				done();
+			}).catch(done);
+		});
+		/*it("existing + hydrate", (done) => {
+			const num = 10;
+			const wait = [];
+			const sub = orm.create("Sub");
+			sub.set({name: "sub"}).then(() => {
+				for (let a = 0; a < num; a++) {
+					const model = orm.create("FindOneAndUpdate");
+					wait.push(model.set({
+						key: "skey" + a,
+						value: "value" + a,
+						sub
+					}).then(model => model.save()));
+				}
+				Promise.all(wait).then(() => {
+					const wait = [];
+					for (let a = 0; a < num; a++) {
+						wait.push(orm.findOneAndUpdate("FindOneAndUpdate", {key: "skey" + a}, {hydrate: ["Sub"]}));
+					}
+					return Promise.all(wait);
+				}).then((results) => {
+					results.forEach((model, a) => {
+						const result = model.get();
+						result.sub = result.sub.get();
+						delete result._id;
+						delete result.sub._id;
+						assert.deepStrictEqual(result, {
+							key: "skey" + a,
+							value: "value" + a,
+							sub: {name: "sub"}
+						});
+					});
+					done();
+				}).catch(done);
+			});
+		});
+		it("not existing", (done) => {
+			orm.findOneAndUpdate("FindOneAndUpdate", {key: "not existing"}).then((res) => {
+				assert.strictEqual(res, null);
+				done();
+			}).catch(done);
+		});*/
+	});
 	describe("get", () => {
 		const idxs = [];
 		const fake_idxs = (new Array(10)).fill("123456789012345678901234");

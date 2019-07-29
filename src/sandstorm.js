@@ -89,7 +89,7 @@ Sandstorm.prototype.use = function (dbName) {
 	return this.ensureIndexes().catch(error => (console.error(error), this.db));
 };
 /**
- * @param {Object} options
+ * @param {Object} [options]
  * @returns {Promise<Db>}
  */
 Sandstorm.prototype.ensureIndexes = function (options) {

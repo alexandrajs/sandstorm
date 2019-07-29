@@ -253,6 +253,18 @@ function setTargetItem(parameters) {
 	return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + target_key + "' in '" + path + "' to be " + item_schema.type + ", got " + typeof value));
 }
 
+/**
+ *
+ * @param fieldOrSpec
+ * @returns {string}
+ */
+function fieldOrSpecToName(fieldOrSpec) {
+	if (typeof fieldOrSpec === "string") {
+		return fieldOrSpec;
+	}
+	return Object.entries(fieldOrSpec).reduce((name, [key, value]) => name.concat(key, value), []).join("_");
+}
+
 module.exports = {
 	isEmpty,
 	isPlainObject,
@@ -264,6 +276,7 @@ module.exports = {
 	objectToDotNotation,
 	_objectToDotNotation,
 	modelGet,
-	setTargetItem
+	setTargetItem,
+	fieldOrSpecToName
 };
 const Model = require("./model");

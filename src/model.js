@@ -200,6 +200,8 @@ function _delete(model) {
 					return reject(err);
 				}
 				collection.deleteOne({_id: model.data._id}, (err) => {
+					model.orm.cache.delete(model.name, model.data._id, () => {
+					});
 					if (err) {
 						return reject(err);
 					}

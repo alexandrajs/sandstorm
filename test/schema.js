@@ -30,7 +30,8 @@ describe("Schema", () => {
 				return db.collection("Sub");
 			}).then((collection) => {
 				return collection.listIndexes().toArray();
-			}).then(() => {
+			}).then((indexes) => {
+				//console.log(indexes);
 				orm.disconnect();
 				done();
 			}).catch(done);

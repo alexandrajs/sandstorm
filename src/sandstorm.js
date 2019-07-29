@@ -89,11 +89,11 @@ Sandstorm.prototype.use = function (dbName) {
 	return this.ensureIndexes().catch(error => (console.error(error), this.db));
 };
 /**
- *
+ * @param {Object} options
  * @returns {Promise<Db>}
  */
-Sandstorm.prototype.ensureIndexes = function () {
-	return _ensure_indexes(this.db, this.schemas);
+Sandstorm.prototype.ensureIndexes = function (options) {
+	return _ensure_indexes(this.db, this.schemas, options);
 };
 /**
  * Disconnects from server
@@ -273,11 +273,13 @@ function _init_cache(orm, name) {
  *
  * @param {Db} db
  * @param {Object} schemas
+ * @param {Object} [options]
  * @returns {Promise<Db>}
  * @private
  */
-function _ensure_indexes(db, schemas) {
+function _ensure_indexes(db, schemas, options) {
 	const wait = [];
+	options = Object.assign({overwrite: true}, options || {});
 	Object.entries(schemas).forEach(([name, schema]) => {
 		const indexes = schema.options.indexes;
 		indexes && wait.push(new Promise((resolve, reject) => {
@@ -292,14 +294,21 @@ function _ensure_indexes(db, schemas) {
 					if (typeof index.fieldOrSpec !== "string" && !common.isPlainObject(index.fieldOrSpec)) {
 						return Promise.reject(new ExtError("ERR_COLLECTION_INDEX_FIELD_OR_SPEC_MUST_BE_OBJECT_OR_STRING", "Collection index.fieldOrSpec must be plain object or string"));
 					}
-					const options = Object.assign({}, index.options || {});
+					const index_options = Object.assign({}, index.options || {});
 					const collation = Object.assign({}, schema.options.collation || {});
-					if (!common.isEmpty(collation) && !options.collation) {
-						options.collation = collation;
+					if (!common.isEmpty(collation) && !index_options.collation) {
+						index_options.collation = collation;
 					}
-					return collection.createIndex(index.fieldOrSpec, common.isEmpty(options) ? undefined : options).catch(error => {
+					return collection.createIndex(index.fieldOrSpec, common.isEmpty(index_options) ? undefined : index_options).catch(error => {
 						// TODO check if it's doubled index name, if so, drop old index and try again
-						throw new ExtError("ERR_MONGODB_INTERNAL_ERROR", error.message);
+						if (error.codeName === "IndexOptionsConflict" && options.overwrite) {
+							return collection.dropIndex(common.fieldOrSpecToName(index.fieldOrSpec)).then(() => {
+								return collection.createIndex(index.fieldOrSpec, common.isEmpty(index_options) ? undefined : index_options).catch((error) => {
+									return Promise.reject(new ExtError("ERR_MONGODB_INTERNAL_ERROR", error.message));
+								});
+							});
+						}
+						return Promise.reject(new ExtError("ERR_MONGODB_INTERNAL_ERROR", error.message));
 					});
 				})));
 			});

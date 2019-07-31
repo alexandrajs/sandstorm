@@ -57,23 +57,36 @@ function Sandstorm(options) {
 	 * @private
 	 */
 	this._connectionString = "";
+	/**
+	 *
+	 * @type {Object|undefined}
+	 * @private
+	 */
+	this._connectionOptions = undefined;
 }
 
 /**
  * Connect to MongoDD using given connection string
  * @param {string} connectionString
+ * @param {Object} [connectionOptions]
  * @returns {Promise<MongoClient>}
  */
-Sandstorm.prototype.connect = function (connectionString) {
+Sandstorm.prototype.connect = function (connectionString, connectionOptions) {
 	this._connectionString = "";
-	const cache_name = connectionString;
+	this._connectionOptions = undefined;
+	const cache_name = connection_cache_key({
+		connectionString,
+		connectionOptions
+	});
 	if (cache_name in __c_caches) {
 		this._connectionString = connectionString;
+		this._connectionOptions = connectionOptions;
 		this.client = __c_caches[cache_name];
 		return Promise.resolve(this.client);
 	}
-	return mongodb.MongoClient.connect(connectionString).then((client) => {
+	return mongodb.MongoClient.connect(connectionString, connectionOptions).then((client) => {
 		this._connectionString = connectionString;
+		this._connectionOptions = connectionOptions;
 		this.client = client;
 		return __c_caches[cache_name] = client;
 	});
@@ -99,7 +112,7 @@ Sandstorm.prototype.ensureIndexes = function (options) {
  * Disconnects from server
  */
 Sandstorm.prototype.disconnect = function () {
-	const cache_name = this._connectionString;
+	const cache_name = connection_cache_key(this);
 	delete __c_caches[cache_name];
 	this.cache.pop();
 	this.cache.pop().client.disconnect(); // Redis disconnect
@@ -253,7 +266,7 @@ const __c_caches = {};
  * @private
  */
 function _init_cache(orm, name) {
-	const cache_name = orm._connectionString + "_" + name;
+	const cache_name = connection_cache_key(orm) + "_" + name;
 	if (cache_name in __caches) {
 		return __caches[cache_name];
 	}
@@ -315,4 +328,16 @@ function _ensure_indexes(db, schemas, options) {
 		}));
 	});
 	return Promise.all(wait).then(() => db);
+}
+
+/**
+ *
+ * @param {object} input
+ * @returns {string}
+ */
+function connection_cache_key({connectionString, _connectionString, connectionOptions, _connectionOptions}) {
+	if (_connectionString) {
+		return _connectionString + (_connectionOptions ? "_" + JSON.stringify(_connectionOptions) : "");
+	}
+	return connectionString + (connectionOptions ? "_" + JSON.stringify(connectionOptions) : "");
 }

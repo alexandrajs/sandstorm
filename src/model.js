@@ -116,7 +116,8 @@ function _save_set(model, resolve, reject) {
 			return reject(err);
 		}
 		const doc = _get(model, {dry: true});
-		const _save_set_cb = (err) => {
+		let method;
+		const _save_set_cb = (err, _result) => {
 			if (err) {
 				return reject(err);
 			}
@@ -126,15 +127,32 @@ function _save_set(model, resolve, reject) {
 				if (err) {
 					return reject(err);
 				}
-				resolve(doc._id);
+				{
+					const {
+						result = {}, modifiedCount, upsertedId, upsertedCount, matchedCount, insertedCount, insertedId
+					} = _result;
+					resolve({
+						_id: doc._id,
+						method,
+						result,
+						modifiedCount,
+						upsertedId,
+						upsertedCount,
+						matchedCount,
+						insertedCount,
+						insertedId
+					});
+				}
 			});
 		};
 		if (model.data._id) {
 			if (typeof model.data._id === "string" && !model.schema.properties.hasOwnProperty("_id")) {
 				model.data._id = new ObjectID(model.data._id);
 			}
+			method = "replace";
 			return collection.replaceOne({_id: model.data._id}, doc, {upsert: true}, _save_set_cb);
 		}
+		method = "insert";
 		collection.insertOne(doc, _save_set_cb);
 	});
 }
@@ -151,8 +169,19 @@ function _save_merge(model, resolve, reject) {
 		return reject(new ExtError("ERR_MISSING_ID_ON_MERGE_SAVE", "Missing '_id' on merge save"));
 	}
 	const _id = (typeof model.data._id === "string" && !model.schema.properties.hasOwnProperty("_id")) ? new ObjectID(model.data._id) : model.data._id;
+	const method = "update";
 	if (common.isEmpty(model._set)) {
-		return resolve(_id);
+		return resolve({
+			_id,
+			method,
+			result: {},
+			modifiedCount: 0,
+			upsertedId: null,
+			upsertedCount: 0,
+			matchedCount: 1,
+			insertedCount: 0,
+			insertedId: null
+		});
 	}
 	const update = {
 		$set: common.objectToDotNotation(_get(model, {
@@ -166,7 +195,7 @@ function _save_merge(model, resolve, reject) {
 			return reject(err);
 		}
 		model._set = {};
-		collection.updateOne({_id: _id}, update, {upsert: true}, (err) => {
+		collection.updateOne({_id: _id}, update, {upsert: true}, (err, _result) => {
 			if (err) {
 				return reject(err);
 			}
@@ -174,7 +203,22 @@ function _save_merge(model, resolve, reject) {
 				if (err) {
 					return reject(err);
 				}
-				resolve(_id);
+				{
+					const {
+						result = {}, modifiedCount, upsertedId, upsertedCount, matchedCount, insertedCount, insertedId
+					} = _result;
+					resolve({
+						_id,
+						method,
+						result,
+						modifiedCount,
+						upsertedId,
+						upsertedCount,
+						matchedCount,
+						insertedCount,
+						insertedId
+					});
+				}
 			});
 		});
 	});
@@ -276,7 +320,7 @@ function _set(model, properties, merge) {
 				if (model.data._id) {
 					throw new ExtError("ERR_CANT_OVERWRITE_ID", "Can't overwrite model '_id'");
 				}
-				if (!merge) {
+				if (model.overwrite) {
 					if (typeof item === "string") {
 						item = new ObjectID(item);
 					}

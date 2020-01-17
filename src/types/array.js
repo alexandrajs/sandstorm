@@ -43,7 +43,7 @@ function _set(model, target, set, schema, key, path, value) {
 			item_schema: schema.item,
 			type,
 			key,
-			path: path + "." + target_key,
+			path: path ? path + "." + target_key : target_key,
 			value
 		});
 	}));
@@ -62,7 +62,7 @@ function _set(model, target, set, schema, key, path, value) {
  */
 function set(model, target, set, schema, key, path, value) {
 	if (!(value instanceof Array)) {
-		return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be instance of Array, got " + typeof value));
+		return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + path + "' to be instance of Array, got " + typeof value));
 	}
 	return _set(model, target, set, schema, key, path, value);
 }

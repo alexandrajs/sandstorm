@@ -33,8 +33,8 @@ function _set(model, target, set, schema, key, path, value) {
  * @returns {*}
  */
 function set(model, target, set, schema, key, path, value) {
-	if (value === null || value === undefined) {
-		return Promise.reject(new ExtError("ERR_PROPERTY_TYPE_CANT_BE_NULL_OR_UNDEFINED", "Value of '" + key + "' can not be null or undefined"));
+	if (value == null) {
+		return Promise.reject(new ExtError("ERR_PROPERTY_TYPE_CANT_BE_NULL_OR_UNDEFINED", "Value of '" + path + "' can not be null or undefined"));
 	}
 	return _set(model, target, set, schema, key, path, value);
 }

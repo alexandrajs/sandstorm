@@ -42,7 +42,7 @@ function set(model, target, set, schema, key, path, value) {
 		}
 	}
 	if (!(value instanceof ObjectID)) {
-		return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be instance of ObjectID or string, got " + typeof value));
+		return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + path + "' to be instance of ObjectID or string, got " + typeof value));
 	}
 	return _set(model, target, set, schema, key, path, value);
 }

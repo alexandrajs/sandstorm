@@ -41,7 +41,7 @@ function _set(model, target, set, schema, key, path, value) {
 			item_schema,
 			type,
 			key,
-			path: path + "." + key,
+			path: path ? path + "." + target_key : target_key,
 			value
 		}));
 	});
@@ -61,7 +61,7 @@ function _set(model, target, set, schema, key, path, value) {
  */
 function set(model, target, set, schema, key, path, value) {
 	if (!common.isPlainObject(value)) {
-		return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be plain object"));
+		return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + path + "' to be plain object"));
 	}
 	return _set(model, target, set, schema, key, path, value);
 }

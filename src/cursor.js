@@ -193,7 +193,7 @@ Cursor.prototype.count = function (applySkipLimit, options) {
  */
 Cursor.prototype.hydrate = function (names) {
 	if (!(names instanceof Array)) {
-		throw new ExtError("");
+		throw new ExtError("ERR_PARAM_NAMES_MUST_BE_ARRAY", "Parameter 'names' must be an array");
 	}
 	this.options.hydrate = names;
 	return this;

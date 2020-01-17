@@ -84,7 +84,7 @@ Sandstorm.prototype.connect = function (connectionString, connectionOptions) {
 		this.client = __c_caches[cache_name];
 		return Promise.resolve(this.client);
 	}
-	return mongodb.MongoClient.connect(connectionString, connectionOptions).then((client) => {
+	return mongodb.MongoClient.connect(connectionString, Object.assign({useNewUrlParser: true}, connectionOptions || {})).then((client) => {
 		this._connectionString = connectionString;
 		this._connectionOptions = connectionOptions;
 		this.client = client;

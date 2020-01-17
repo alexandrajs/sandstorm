@@ -288,7 +288,7 @@ function _set(model, properties, merge) {
 				}
 			}
 			if (!model.schema.properties[targetKey]) {
-				throw new ExtError("ERR_PROPERTY_NOT_ALLOWED", "Property '" + targetKey + "' not allowed");
+				throw new ExtError("ERR_PROPERTY_NOT_ALLOWED", "Property '" + targetKey + "' not allowed in model '" + this.name + "'");
 			}
 			const type = model.schema.properties[targetKey].type;
 			if (type in types) {

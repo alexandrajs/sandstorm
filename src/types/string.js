@@ -19,10 +19,10 @@ const ExtError = require("exterror");
 function _set(model, target, set, schema, key, path, value) {
 	const length = value.length;
 	if (schema.min && length < schema.min) {
-		return Promise.reject(new ExtError("ERR_STRING_TOO_SHORT", "Expected value of '" + key + "' to be longer than " + schema.min + ", got " + length));
+		return Promise.reject(new ExtError("ERR_STRING_TOO_SHORT", "Expected value of '" + path + "' to be longer than " + schema.min + ", got " + length));
 	}
 	if (schema.max && length > schema.max) {
-		return Promise.reject(new ExtError("ERR_STRING_TOO_LONG", "Expected value of '" + key + "' to be shorter than " + schema.max + ", got " + length));
+		return Promise.reject(new ExtError("ERR_STRING_TOO_LONG", "Expected value of '" + path + "' to be shorter than " + schema.max + ", got " + length));
 	}
 	if (schema.pattern && !schema.pattern.test(value)) {
 		return Promise.reject(new ExtError("ERR_STRING_NOT_MATCH_PATTERN", "Value of '" + key + "' do not match pattern " + schema.pattern));
@@ -48,7 +48,7 @@ function _set(model, target, set, schema, key, path, value) {
 function set(model, target, set, schema, key, path, value) {
 	if (typeof value !== "string") {
 		if (!(value instanceof String)) {
-			return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be 'string', got " + typeof value));
+			return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + path + "' to be 'string', got " + typeof value));
 		} else {
 			value = value.valueOf();
 		}

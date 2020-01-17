@@ -35,7 +35,7 @@ function _set(model, target, set, schema, key, path, value) {
 function set(model, target, set, schema, key, path, value) {
 	if (value !== true && value !== false) {
 		if (!(value instanceof Boolean)) {
-			return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + key + "' to be boolean, got " + typeof value));
+			return Promise.reject(new ExtError("ERR_WRONG_PROPERTY_TYPE", "Expected value of '" + path + "' to be boolean, got " + typeof value));
 		}
 		value = value.valueOf();
 	}

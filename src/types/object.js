@@ -22,8 +22,13 @@ function _set(model, target, set, schema, key, path, value) {
 		target[key] = set[key] = Object.assign({}, value);
 		return Promise.resolve();
 	}
-	set[key] = {};
-	target[key] = {};
+	if (model.overwrite || !common.isPlainObject(target[key])) {
+		target[key] = {};
+		set[key] = {};
+	} else {
+		set[key] = Object.assign({}, target[key]);
+		target[key] = Object.assign({}, target[key]);
+	}
 	const _await = [];
 	Object.entries(value).forEach(([target_key, item]) => {
 		if (!schema.properties.hasOwnProperty(target_key)) {

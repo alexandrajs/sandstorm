@@ -320,6 +320,45 @@ describe("Model", () => {
 			await model.merge({embed: {name: "embed updated"}});
 			await model.save();
 		});
+		it("deep merge", async function () {
+			orm.register("DeepMerge", {
+				o: {
+					a: "String",
+					b: {
+						type: "String",
+						required: true
+					},
+					c: {
+						o: {
+							o: {
+								a: "String",
+								b: {
+									type: "String",
+									required: true
+								}
+							}
+						}
+					}
+				}
+			});
+			let model = orm.create("DeepMerge");
+			await model.set({
+				o: {
+					b: "b",
+					c: {o: {o: {b: "b"}}}
+				}
+			});
+			const {_id} = await model.save();
+			console.log(_id);
+			model = await orm.get("DeepMerge", _id);
+			await model.merge({
+				o: {
+					a: "a",
+					c: {o: {o: {a: "a"}}}
+				}
+			});
+			await model.save();
+		});
 		it("base set +", async function () {
 			const _embed = orm.create("Embed");
 			await _embed.set({

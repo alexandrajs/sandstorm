@@ -63,10 +63,12 @@ function getModel(orm, name, id, callback) {
  * @param {Sandstorm} orm
  * @param {string} name
  * @param {Object} doc
- * @returns {Model}
+ * @returns {Promise<Model>}
  */
 function docToModel(orm, name, doc) {
-	return new Model(orm, name, doc);
+	const model = new Model(orm, name, doc);
+	const {_id, ...data} = model.get();
+	return model.set(data).then(_ => model);
 }
 
 /**
@@ -175,7 +177,7 @@ function modelGet(target, schema, key, path, dry) {
 			if (schema.default !== undefined) {
 				return typeof schema.default === "function" ? schema.default() : schema.default;
 			}
-			throw new ExtError("ERR_MISSING_PROPERTY", "Missing property '" + path + "'");
+			throw new ExtError("ERR_MISSING_PROPERTY", "Missing required property '" + path + "'");
 		}
 		return;
 	}

@@ -45,13 +45,14 @@ Cursor.prototype.toArray = function (options) {
 		if (this.options.raw && !this.options.hydrate.length) {
 			return docs;
 		}
-		const models = docs.map((doc) => common.docToModel(this.orm, this.name, doc));
-		if (this.options.hydrate.length) {
-			return Promise.all(models.map((model) => {
-				return model.hydrate(this.options.hydrate);
-			}));
-		}
-		return models;
+		return Promise.all(docs.map((doc) => common.docToModel(this.orm, this.name, doc))).then(models => {
+			if (this.options.hydrate.length) {
+				return Promise.all(models.map((model) => {
+					return model.hydrate(this.options.hydrate);
+				}));
+			}
+			return models;
+		});
 	});
 };
 /* istanbul ignore next */
@@ -125,11 +126,13 @@ Cursor.prototype.next = function () {
 		if (!doc || this.options.raw && (!this.options.hydrate || !this.options.hydrate.length)) {
 			return doc;
 		}
-		const model = common.docToModel(this.orm, this.name, doc);
-		if (this.options.hydrate && this.options.hydrate.length) {
-			return model.hydrate(this.options.hydrate);
-		}
-		return model;
+		return common.docToModel(this.orm, this.name, doc).then(model => {
+			if (this.options.hydrate && this.options.hydrate.length) {
+				return model.hydrate(this.options.hydrate);
+			}
+			return model;
+		});
+
 	});
 };
 /**

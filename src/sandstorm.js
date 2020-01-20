@@ -158,11 +158,12 @@ Sandstorm.prototype.findOne = function (name, query, options) {
 		if (!doc) {
 			return doc;
 		}
-		const model = common.docToModel(this, name, doc);
-		if (hydrate && hydrate.length) {
-			return model.hydrate(hydrate);
-		}
-		return model;
+		return common.docToModel(this, name, doc).then(model => {
+			if (hydrate && hydrate.length) {
+				return model.hydrate(hydrate);
+			}
+			return model;
+		});
 	});
 };
 /**
@@ -182,11 +183,12 @@ Sandstorm.prototype.findOneAndUpdate = function (name, filter, update, options) 
 		if (!doc) {
 			return doc;
 		}
-		const model = common.docToModel(this, name, doc);
-		if (hydrate && hydrate.length) {
-			return model.hydrate(hydrate);
-		}
-		return model;
+		return common.docToModel(this, name, doc).then(model => {
+			if (hydrate && hydrate.length) {
+				return model.hydrate(hydrate);
+			}
+			return model;
+		});
 	});
 };
 /* istanbul ignore next */

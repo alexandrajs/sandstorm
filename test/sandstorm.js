@@ -209,7 +209,7 @@ describe("Sandstorm", () => {
 			});
 			Promise.all((new Array(10)).fill(0).map((_, idx) => {
 				return orm.create("Get").set({key: "" + idx}).then((model) => {
-					return model.save().then(idx => idxs.push(idx));
+					return model.save().then(({_id}) => idxs.push(_id));
 				});
 			})).then(() => {
 				return orm.create("StringId").set({

@@ -4,10 +4,11 @@
   "description": "Not a MongoDB ORM",
   "main": "./index.js",
   "scripts": {
-    "test": "nyc --reporter=lcov --reporter=html ./node_modules/mocha/bin/_mocha  && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
-    "raw-test": "node_modules/.bin/_mocha",
-    "docs": "./node_modules/.bin/jsdoc -c ./.jsdocrc -r -R ./README.md  -d ../../gh-pages/sandstorm/ src/",
-    "codeclimate": "docker run --rm --env CODECLIMATE_CODE=\"$PWD\" --volume \"$PWD\":/code --volume /var/run/docker.sock:/var/run/docker.sock --volume /tmp/cc:/tmp/cc codeclimate/codeclimate analyze -f html > codeclimate.html"
+    "test": "nyc --reporter=lcov --reporter=html mocha -r ts-node/register test/**/*.ts && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js && rm -rf ./coverage",
+    "raw-test": "mocha -r ts-node/register test/**/*.ts",
+    "docs": "typedoc --out docs src --entryPointStrategy expand ./src",
+    "codeclimate": "docker run --rm --env CODECLIMATE_CODE=\"$PWD\" --volume \"$PWD\":/code --volume /var/run/docker.sock:/var/run/docker.sock --volume /tmp/cc:/tmp/cc codeclimate/codeclimate analyze -f html > codeclimate.html",
+    "typecheck": "tsc --noEmit --project tsconfig.json"
   },
   "repository": {
     "type": "git",
@@ -28,7 +29,7 @@
   },
   "homepage": "https://github.com/alexandrajs/sandstorm#readme",
   "peerDependencies": {
-    "mongodb": "^3.5.1"
+    "mongodb": "^6.16.0"
   },
   "dependencies": {
     "amule": "^0.2.5",
@@ -38,12 +39,16 @@
     "exterror": "^1.3.1"
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^22.15.21",
     "benchmark": "^2.1.4",
     "coveralls": "^3.0.9",
-    "ink-docstrap": "^1.3.2",
     "mocha": "^7.0.0",
     "mocha-lcov-reporter": "^1.3.0",
-    "mongodb": "^3.5.1",
-    "nyc": "^15.0.0"
+    "mongodb": "^6.16.0",
+    "nyc": "^15.0.0",
+    "ts-node": "^10.9.2",
+    "typedoc": "^0.28.4",
+    "typescript": "^5.8.3"
   }
 }
